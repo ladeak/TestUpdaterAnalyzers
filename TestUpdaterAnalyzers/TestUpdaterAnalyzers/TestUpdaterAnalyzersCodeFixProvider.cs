@@ -38,11 +38,16 @@ namespace TestUpdaterAnalyzers
             var diagnosticSpan = diagnostic.Location.SourceSpan;
 
             SyntaxNode parentNode = root.FindNode(diagnosticSpan);
+            bool localScope = true;
+            if (diagnostic.Properties.TryGetValue("localscope", out var scope))
+                if (bool.TryParse(scope, out bool parsedScope))
+                    localScope = parsedScope;
+
             context.RegisterCodeFix(
               CodeAction.Create(title: Title, createChangedDocument: async c =>
               {
                   var walker = new RhinoMockSyntaxWalker(await context.Document.GetSemanticModelAsync(), context.Document);
-                  return await walker.WalkAsync(parentNode);
+                  return await walker.WalkAsync(parentNode, localScope);
               }, equivalenceKey: diagnostic.Id),
               diagnostic);
         }

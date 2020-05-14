@@ -3,8 +3,6 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Editing;
 using Microsoft.CodeAnalysis.Text;
-using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -40,25 +38,16 @@ namespace TestUpdaterAnalyzers
 
         public async Task UseReturns(SyntaxNode parentNode, CancellationToken cancellationToken)
         {
-            //var root = await document.GetSyntaxRootAsync(cancellationToken) as CompilationUnitSyntax;
-            //var newRoot = root;
-
             if (parentNode is MemberAccessExpressionSyntax memberAccess)
             {
                 _editor.ReplaceNode(memberAccess.Name, SyntaxFactory.IdentifierName("Returns"));
             }
 
             AddNSubstituteUsings();
-
-            //document = document.WithSyntaxRoot(newRoot);
-            //return document;
         }
 
         public async Task UseArgsAny(ArgumentSyntax argument, CancellationToken cancellationToken)
         {
-            //var root = await document.GetSyntaxRootAsync(cancellationToken) as CompilationUnitSyntax;
-            //var newRoot = root;
-
             if (argument.Expression is MemberAccessExpressionSyntax anyProperty)
             {
                 if (anyProperty.Name.ToString() == "Anything" && anyProperty.Expression is MemberAccessExpressionSyntax isProperty)
@@ -80,9 +69,6 @@ namespace TestUpdaterAnalyzers
 
         public async Task UseSubstituteFor(SyntaxNode parentNode, CancellationToken cancellationToken)
         {
-            //var root = await document.GetSyntaxRootAsync(cancellationToken) as CompilationUnitSyntax;
-            //var newRoot = root;
-
             if (parentNode is MemberAccessExpressionSyntax memberAccess)
             {
                 if (memberAccess.Name is GenericNameSyntax generateMockIdentifier)
@@ -98,9 +84,6 @@ namespace TestUpdaterAnalyzers
                 }
             }
             AddNSubstituteUsings();
-
-            //document = document.WithSyntaxRoot(newRoot);
-            //return document;
         }
 
         public async Task DropExpectCall(SyntaxNode parentNode, CancellationToken cancellationToken)
@@ -118,13 +101,8 @@ namespace TestUpdaterAnalyzers
             var invocation = SyntaxFactory.InvocationExpression(SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
                 mockedObjectIdentifier, mockedMethod.Name), mockMethodInvocation.ArgumentList);
 
-            //var root = await document.GetSyntaxRootAsync(cancellationToken) as CompilationUnitSyntax;
-            //var newRoot = root;
             _editor.ReplaceNode(expectInvocationExpression, invocation);
             AddNSubstituteUsings();
-
-            //document = document.WithSyntaxRoot(newRoot);
-            //return document;
         }
 
         public void AddNSubstituteUsings()
