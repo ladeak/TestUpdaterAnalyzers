@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace TestHelper
@@ -174,6 +175,7 @@ namespace TestHelper
                 .AddRuntimeLibrary(projectId, "System.dll")
                 .AddRuntimeLibrary(projectId, "System.Core.dll")
                 .AddRuntimeLibrary(projectId, "mscorlib.dll")
+                .AddRuntimeLibrary(projectId, "System.Threading.Tasks.Extensions.dll")
                 .AddRuntimeLibrary(projectId, "System.Runtime.dll");
             solution = solution.WithProjectCompilationOptions(projectId, solution.GetProject(projectId).CompilationOptions
                 .WithOutputKind(OutputKind.DynamicallyLinkedLibrary));

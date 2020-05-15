@@ -39,7 +39,7 @@ namespace TestHelper
         private static IEnumerable<Diagnostic> GetNewDiagnostics(IEnumerable<Diagnostic> diagnostics, IEnumerable<Diagnostic> newDiagnostics)
         {
             var oldArray = diagnostics.OrderBy(d => d.Location.SourceSpan.Start).ToArray();
-            var newArray = newDiagnostics.OrderBy(d => d.Location.SourceSpan.Start).ToArray();
+            var newArray = newDiagnostics.OrderBy(d => d.Location.SourceSpan.Start).Where(x=>x.Severity != DiagnosticSeverity.Hidden).ToArray();
 
             int oldIndex = 0;
             int newIndex = 0;

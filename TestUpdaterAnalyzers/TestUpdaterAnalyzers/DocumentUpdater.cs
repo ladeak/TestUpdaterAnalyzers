@@ -26,16 +26,6 @@ namespace TestUpdaterAnalyzers
 
         public Document Complete() => _editor.GetChangedDocument();
 
-        private TextSpan GetFromVariableDeclaration(SyntaxNode node)
-        {
-            while (true)
-            {
-                if (node is MethodDeclarationSyntax methodDeclaration)
-                    return methodDeclaration.FullSpan;
-                node = node.Parent;
-            }
-        }
-
         public async Task UseReturns(SyntaxNode parentNode, CancellationToken cancellationToken)
         {
             if (parentNode is MemberAccessExpressionSyntax memberAccess)
@@ -43,7 +33,18 @@ namespace TestUpdaterAnalyzers
                 _editor.ReplaceNode(memberAccess.Name, SyntaxFactory.IdentifierName("Returns"));
             }
 
-            AddNSubstituteUsings();
+            AddNSubstituteUsing();
+        }
+
+        public async Task UseThrows(SyntaxNode parentNode, CancellationToken cancellationToken)
+        {
+            if (parentNode is MemberAccessExpressionSyntax memberAccess)
+            {
+                _editor.ReplaceNode(memberAccess.Name, SyntaxFactory.IdentifierName("Throws"));
+            }
+
+            AddNSubstituteUsing();
+            AddNSubstituteExceptionExtensionsUsing();
         }
 
         public async Task UseArgsAny(ArgumentSyntax argument, CancellationToken cancellationToken)
@@ -58,10 +59,11 @@ namespace TestUpdaterAnalyzers
                         var newArg = SyntaxFactory.Argument(
                             SyntaxFactory.InvocationExpression(
                             SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
-                            SyntaxFactory.IdentifierName("Arg"),
+                                SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, SyntaxFactory.IdentifierName("NSubstitute"),
+                            SyntaxFactory.IdentifierName("Arg")),
                             SyntaxFactory.GenericName(SyntaxFactory.Identifier("Any"), typeArguments))));
                         _editor.ReplaceNode(argument, newArg);
-                        AddNSubstituteUsings();
+                        AddNSubstituteUsing();
                     }
                 }
             }
@@ -83,7 +85,7 @@ namespace TestUpdaterAnalyzers
                     _editor.ReplaceNode(parentNode.Parent, newInvocation);
                 }
             }
-            AddNSubstituteUsings();
+            AddNSubstituteUsing();
         }
 
         public async Task DropExpectCall(SyntaxNode parentNode, CancellationToken cancellationToken)
@@ -102,15 +104,27 @@ namespace TestUpdaterAnalyzers
                 mockedObjectIdentifier, mockedMethod.Name), mockMethodInvocation.ArgumentList);
 
             _editor.ReplaceNode(expectInvocationExpression, invocation);
-            AddNSubstituteUsings();
+            AddNSubstituteUsing();
         }
 
-        public void AddNSubstituteUsings()
+        public void AddNSubstituteUsing()
         {
             CompilationUnitSyntax root = _editor.GetChangedRoot() as CompilationUnitSyntax;
             if (!root.Usings.Any(x => x.Name.GetText().ToString() == "NSubstitute"))
             {
                 var newUsing = SyntaxFactory.UsingDirective(SyntaxFactory.IdentifierName("NSubstitute"));
+                _editor.InsertBefore((_editor.OriginalRoot as CompilationUnitSyntax).Usings.FirstOrDefault(), newUsing);
+            }
+        }
+
+        public void AddNSubstituteExceptionExtensionsUsing()
+        {
+            CompilationUnitSyntax root = _editor.GetChangedRoot() as CompilationUnitSyntax;
+            if (!root.Usings.Any(x => x.Name.GetText().ToString() == "NSubstitute.ExceptionExtensions"))
+            {
+                var newUsing = SyntaxFactory.UsingDirective(SyntaxFactory.QualifiedName(
+                    SyntaxFactory.IdentifierName("NSubstitute"),
+                    SyntaxFactory.IdentifierName("ExceptionExtensions")));
                 _editor.InsertBefore((_editor.OriginalRoot as CompilationUnitSyntax).Usings.FirstOrDefault(), newUsing);
             }
         }

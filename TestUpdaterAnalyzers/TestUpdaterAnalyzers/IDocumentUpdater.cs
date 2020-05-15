@@ -12,6 +12,7 @@ namespace TestUpdaterAnalyzers
         Task Start(CancellationToken token = default);
         Task UseArgsAny(ArgumentSyntax node, CancellationToken cancellationToken);
         Task UseReturns(SyntaxNode node, CancellationToken cancellationToken);
+        Task UseThrows(SyntaxNode node, CancellationToken cancellationToken);
         Task UseSubstituteFor(SyntaxNode node, CancellationToken cancellationToken);
     }
 }
