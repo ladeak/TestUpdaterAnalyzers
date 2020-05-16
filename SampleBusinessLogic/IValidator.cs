@@ -4,6 +4,6 @@
     {
         bool Validate(Request request);
 
-        void TryValidate(Request request, out bool result);
+        bool TryValidate(Request request, out bool result);
     }
 }

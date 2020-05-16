@@ -36,5 +36,25 @@ namespace RhinoXUnitFixture
             var result = sut.CalculateId(new Request() { Age = 1, Height = 1, Name = "test" });
             Assert.Equal(5, result);
         }
+
+        [Fact]
+        public void OutVariableArgs()
+        {
+            var mock = Substitute.For<IValidator>();
+            mock.TryValidate(Arg.Any<Request>(), out Arg.Any<bool>()).Returns(c => { c[1] = true; return true; });
+            var sut = new BusinessLogic(mock);
+            var result = sut.TryCalculateId(new Request() { Age = 1, Height = 1, Name = "test" });
+            Assert.Equal(5, result);
+        }
+
+        [Fact]
+        public void OutVariable()
+        {
+            var mock = Substitute.For<IValidator>();
+            mock.TryValidate(new Request(), out var dummy).Returns(c => { c[1] = true; return true; });
+            var sut = new BusinessLogic(mock);
+            var result = sut.TryCalculateId(new Request() { Age = 1, Height = 1, Name = "test" });
+            Assert.Equal(5, result);
+        }
     }
 }

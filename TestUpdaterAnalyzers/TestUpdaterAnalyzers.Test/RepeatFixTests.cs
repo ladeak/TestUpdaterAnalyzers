@@ -7,10 +7,10 @@ using TestHelper;
 namespace TestUpdaterAnalyzers.Test
 {
     [TestClass]
-    public class IgnoreArgumentsFixTests : CodeFixVerifier
+    public class RepeatFixTests : CodeFixVerifier
     {
         [TestMethod]
-        public void IgnoreArgumentsOnReturn()
+        public void RepeatRemovedAfterReturn()
         {
             var test = @"
 using Rhino.Mocks;
@@ -24,10 +24,11 @@ namespace RhinoXUnitFixture
         [Fact]
         public void IgnoreArguments()
         {
-            var mock = MockRepository.GenerateStub<IValidator>();
-            mock.Expect(x => x.Validate(new Request())).IgnoreArguments().Return(true);
+            var mock = MockRepository.GenerateMock<IValidator>();
+            mock.Expect(x => x.Validate(Arg<Request>.Is.Anything)).Repeat.Twice().Return(true);
             var sut = new BusinessLogic(mock);
             var result = sut.CalculateId(new Request() { Age = 1, Height = 1, Name = ""test"" });
+            result = sut.CalculateId(new Request() { Age = 1, Height = 1, Name = ""test"" });
             Assert.Equal(5, result);
         }
     }
@@ -49,9 +50,10 @@ namespace RhinoXUnitFixture
         public void IgnoreArguments()
         {
             var mock = Substitute.For<IValidator>();
-            mock.Validate(new Request()).ReturnsForAnyArgs(true);
+            mock.Validate(NSubstitute.Arg.Any<Request>()).Returns(true);
             var sut = new BusinessLogic(mock);
             var result = sut.CalculateId(new Request() { Age = 1, Height = 1, Name = ""test"" });
+            result = sut.CalculateId(new Request() { Age = 1, Height = 1, Name = ""test"" });
             Assert.Equal(5, result);
         }
     }
@@ -61,7 +63,7 @@ namespace RhinoXUnitFixture
         }
 
         [TestMethod]
-        public void IgnoreArgumentsOnThrow()
+        public void RepeatRemovedBeforeReturn()
         {
             var test = @"
 using Rhino.Mocks;
@@ -75,10 +77,12 @@ namespace RhinoXUnitFixture
         [Fact]
         public void IgnoreArguments()
         {
-            var mock = MockRepository.GenerateStub<IValidator>();
-            mock.Expect(x => x.Validate(Arg<Request>.Is.Anything)).IgnoreArguments().Throw(new ArgumentException(""request""));
+            var mock = MockRepository.GenerateMock<IValidator>();
+            mock.Expect(x => x.Validate(Arg<Request>.Is.Anything)).Return(true).Repeat.Twice();
             var sut = new BusinessLogic(mock);
-            Assert.Throws<ArgumentException>(() => sut.CalculateId(new Request() { Age = 1, Height = 1, Name = ""test"" }));
+            var result = sut.CalculateId(new Request() { Age = 1, Height = 1, Name = ""test"" });
+            result = sut.CalculateId(new Request() { Age = 1, Height = 1, Name = ""test"" });
+            Assert.Equal(5, result);
         }
     }
 }
@@ -87,7 +91,6 @@ namespace RhinoXUnitFixture
 
             var expectedSource = @"
 using NSubstitute;
-using NSubstitute.ExceptionExtensions;
 using Rhino.Mocks;
 using Xunit;
 using SampleBusinessLogic;
@@ -100,9 +103,11 @@ namespace RhinoXUnitFixture
         public void IgnoreArguments()
         {
             var mock = Substitute.For<IValidator>();
-            mock.Validate(NSubstitute.Arg.Any<Request>()).ThrowsForAnyArgs(new ArgumentException(""request""));
+            mock.Validate(NSubstitute.Arg.Any<Request>()).Returns(true);
             var sut = new BusinessLogic(mock);
-            Assert.Throws<ArgumentException>(() => sut.CalculateId(new Request() { Age = 1, Height = 1, Name = ""test"" }));
+            var result = sut.CalculateId(new Request() { Age = 1, Height = 1, Name = ""test"" });
+            result = sut.CalculateId(new Request() { Age = 1, Height = 1, Name = ""test"" });
+            Assert.Equal(5, result);
         }
     }
 }

@@ -58,7 +58,7 @@ namespace TestUpdaterAnalyzers
                     {
                         SetTargetNode(memberAccessExpr);
                     }
-                    else if (RhinoRecognizer.TestExpectMethod(memberSymbol))
+                    else if (RhinoRecognizer.TestExpectMethod(memberSymbol) || RhinoRecognizer.TestStubMethod(memberSymbol))
                     {
                         SetTargetNode(memberAccessExpr);
                         if (memberAccessExpr.Expression is IdentifierNameSyntax identifier)

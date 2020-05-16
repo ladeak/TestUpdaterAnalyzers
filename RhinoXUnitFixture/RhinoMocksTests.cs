@@ -37,19 +37,45 @@ namespace RhinoXUnitFixture
             Assert.Equal(5, result);
         }
 
+        [Fact]
+        public void Repeat()
+        {
+            var mock = MockRepository.GenerateMock<IValidator>();
+            mock.Expect(x => x.Validate(Arg<Request>.Is.Anything)).Repeat.Twice().Return(true);
+            var sut = new BusinessLogic(mock);
+            var result = sut.CalculateId(new Request() { Age = 1, Height = 1, Name = "test" });
+            result = sut.CalculateId(new Request() { Age = 1, Height = 1, Name = "test" });
+            Assert.Equal(5, result);
+        }
 
-        // Repeat
-        // IgnoreArguments
-        // Raise
+        [Fact]
+        public void OutVariableWithOutRef()
+        {
+            var mock = MockRepository.GenerateMock<IValidator>();
+            mock.Expect(x => x.TryValidate(new Request(), out var dummy)).OutRef(true).Return(true);
+            var sut = new BusinessLogic(mock);
+            var result = sut.TryCalculateId(new Request() { Age = 1, Height = 1, Name = "test" });
+            Assert.Equal(5, result);
+        }
+
+        [Fact]
+        public void OutVariable()
+        {
+            var mock = MockRepository.GenerateMock<IValidator>();
+            mock.Expect(x => x.TryValidate(Arg<Request>.Is.Anything, out Arg<bool>.Out(true).Dummy)).Return(true);
+            var sut = new BusinessLogic(mock);
+            var result = sut.TryCalculateId(new Request() { Age = 1, Height = 1, Name = "test" });
+            Assert.Equal(5, result);
+        }
+
         // Out argument
         // AssertWasCalled
         // AssertWasNotCalled
         // Do
         // PropertyBehavior
         // WhenCalled
-        // Stub
 
-        // Arguments: Matches, Is (Null, NotNull, Typeof, Equal, Same), Out, Ref
+        // Arguments: Matches, Is (Null, NotNull, Typeof, Equal, Same), Ref
 
         [Fact]
         public void WhenValid_IdCalculated()

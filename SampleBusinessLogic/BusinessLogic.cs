@@ -17,5 +17,12 @@ namespace SampleBusinessLogic
                 throw new ArgumentException(nameof(request));
             return (int)(request.Name.Length * request.Age + request.Height);
         }
+
+        public int TryCalculateId(Request request)
+        {
+            if (!_validator.TryValidate(request, out var someValue) && someValue)
+                throw new ArgumentException(nameof(request));
+            return (int)(request.Name.Length * request.Age + request.Height);
+        }
     }
 }

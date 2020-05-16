@@ -4,7 +4,7 @@ namespace SampleBusinessLogic
 {
     public class Validator : IValidator
     {
-        public void TryValidate(Request request, out bool result)
+        public bool TryValidate(Request request, out bool result)
         {
             if (request == null)
                 result = false;
@@ -14,6 +14,8 @@ namespace SampleBusinessLogic
                                && request.Age < 120
                                && request.Height > 0
                                && request.Height < 250;
+
+            return result;
         }
 
         public bool Validate(Request request)
