@@ -13,7 +13,7 @@ namespace SampleBusinessLogic
 
         public int CalculateId(Request request)
         {
-            if (_validator.Validate(request))
+            if (!_validator.Validate(request))
                 throw new ArgumentException(nameof(request));
             return (int)(request.Name.Length * request.Age + request.Height);
         }

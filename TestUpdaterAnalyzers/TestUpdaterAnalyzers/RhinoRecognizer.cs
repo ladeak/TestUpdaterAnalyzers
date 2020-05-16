@@ -25,6 +25,9 @@ namespace TestUpdaterAnalyzers
         public static bool TestThrowMethod(IMethodSymbol memberSymbol) =>
             TestSymbol(memberSymbol, "Throw", "IMethodOptions");
 
+        public static bool TestIgnoreArgumentsMethod(IMethodSymbol memberSymbol) =>
+            TestSymbol(memberSymbol, "IgnoreArguments", "IMethodOptions");
+
         public static bool TestSymbol(ISymbol symbolsType, string name, string type, string assembly = "Rhino.Mocks")
         {
             return symbolsType.Name == name

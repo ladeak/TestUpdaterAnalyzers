@@ -51,7 +51,7 @@ namespace TestUpdaterAnalyzers
             if (memberAccessExpr != null)
             {
                 var symbolInfo = _semantics.GetSymbolInfo(memberAccessExpr);
-                var memberSymbol = symbolInfo.Symbol as IMethodSymbol ?? symbolInfo.CandidateSymbols.SingleOrDefault()  as IMethodSymbol;
+                var memberSymbol = symbolInfo.Symbol as IMethodSymbol ?? symbolInfo.CandidateSymbols.OfType<IMethodSymbol>().FirstOrDefault();
                 if (memberSymbol != null)
                 {
                     if (RhinoRecognizer.TestReturnMethod(memberSymbol))

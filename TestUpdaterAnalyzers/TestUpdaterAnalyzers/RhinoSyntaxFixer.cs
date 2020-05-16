@@ -5,7 +5,7 @@ namespace TestUpdaterAnalyzers
 {
     public class RhinoSyntaxFixer
     {
-        private readonly SemanticModel _semanticModel;
+        private SemanticModel _semanticModel;
         private Document _document;
 
         public RhinoSyntaxFixer(SemanticModel semanticModel, Document document)
@@ -16,17 +16,17 @@ namespace TestUpdaterAnalyzers
 
         public async Task<Document> WalkAsync(SyntaxNode node, bool localScope)
         {
+            var rewriter = new RhinoInvocationSyntaxRewriter(_semanticModel);
+            var newRoot = rewriter.Rewrite(await _document.GetSyntaxRootAsync());
+            _document = _document.WithSyntaxRoot(newRoot);
+
             var documentUpdater = new DocumentUpdater(_document);
-            var invocationWalker = new RhinoInvocationSyntaxFixer(_semanticModel, documentUpdater);
-
-
-            var newDocument = await invocationWalker.WalkAsync(localScope ? node : await _document.GetSyntaxRootAsync());
-
-            documentUpdater = new DocumentUpdater(newDocument);
-            node = await newDocument.GetSyntaxRootAsync();
-            var newSemantics = await newDocument.GetSemanticModelAsync();
-            var arugmentsWalker = new RhinoArgumentsSyntaxFixer(newSemantics, documentUpdater);
-            return await arugmentsWalker.WalkAsync(node);
+            await documentUpdater.Start();
+            documentUpdater.AddNSubstituteUsing();
+            if (rewriter.UseExceptionExtensions)
+                documentUpdater.AddNSubstituteExceptionExtensionsUsing();
+            _document = documentUpdater.Complete();
+            return _document;
         }
     }
 }
