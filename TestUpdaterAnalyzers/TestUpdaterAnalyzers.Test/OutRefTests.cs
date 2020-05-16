@@ -99,7 +99,7 @@ namespace RhinoXUnitFixture
         public void WhenValid_IdCalculated()
         {
             var mock = Substitute.For<IValidator>();
-            mock.TryValidate(Arg.Any<Request>(), out Arg.Any<bool>()).Returns(c => { c[1] = true; return true; });
+            mock.TryValidate(NSubstitute.Arg.Any<Request>(), out NSubstitute.Arg.Any<bool>()).Returns(c => { c[1] = true; return true; });
             var sut = new BusinessLogic(mock);
             var result = sut.TryCalculateId(new Request() { Age = 1, Height = 1, Name = ""test"" });
             Assert.Equal(5, result);

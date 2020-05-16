@@ -1,12 +1,9 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using NSubstitute;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace TestUpdaterAnalyzers
 {
@@ -109,15 +106,28 @@ namespace TestUpdaterAnalyzers
             var argumentExpr = node.Expression as MemberAccessExpressionSyntax;
             if (argumentExpr != null)
             {
-                var argumentSymbol = _originalSemantics.GetSymbolInfo(argumentExpr).Symbol as IPropertySymbol;
-                if (argumentSymbol != null)
+                var argumentSymbol = _originalSemantics.GetSymbolInfo(argumentExpr).Symbol;
+                if (argumentSymbol is IPropertySymbol propertySymbol)
                 {
-                    if (RhinoRecognizer.TestAnythingProperty(argumentSymbol))
+                    if (RhinoRecognizer.TestAnythingProperty(propertySymbol))
                     {
                         var innerSymbol = _originalSemantics.GetSymbolInfo(argumentExpr.Expression).Symbol as IPropertySymbol;
                         if (RhinoRecognizer.TestIsArgProperty(innerSymbol))
                         {
                             return UseArgsAny(node);
+                        }
+                    }
+                }
+
+                if (node.RefKindKeyword.IsKind(SyntaxKind.OutKeyword) && argumentSymbol is IFieldSymbol fieldSymbol)
+                {
+                    if (RhinoRecognizer.TestDummyField(fieldSymbol))
+                    {
+                        var outMethodSymbol = _originalSemantics.GetSymbolInfo(argumentExpr.Expression).Symbol as IMethodSymbol;
+                        if (RhinoRecognizer.TestOutArgMethod(outMethodSymbol) && argumentExpr.Expression is InvocationExpressionSyntax outMethodInvocation)
+                        {
+                            _currentInvocationContext.Data.OutRefArguments.Add(outMethodInvocation.ArgumentList.Arguments.First().Expression);
+                            return UseArgsAny(node, true);
                         }
                     }
                 }
@@ -217,23 +227,30 @@ namespace TestUpdaterAnalyzers
             return memberAccess.Parent;
         }
 
-        public SyntaxNode UseArgsAny(ArgumentSyntax argument)
+        public SyntaxNode UseArgsAny(ArgumentSyntax argument, bool outParam = false)
         {
-            if (argument.Expression is MemberAccessExpressionSyntax anyProperty)
+            if (argument.Expression is MemberAccessExpressionSyntax finalMemberAccess)
             {
-                if (anyProperty.Name.ToString() == "Anything" && anyProperty.Expression is MemberAccessExpressionSyntax isProperty)
+                var beginExpression = finalMemberAccess.Expression switch
                 {
-                    if (isProperty.Expression is GenericNameSyntax argGenericArgument)
-                    {
-                        var typeArguments = argGenericArgument.TypeArgumentList;
-                        var newArg = SyntaxFactory.Argument(
-                            SyntaxFactory.InvocationExpression(
-                            SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
-                                SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, SyntaxFactory.IdentifierName("NSubstitute"),
-                            SyntaxFactory.IdentifierName("Arg")),
-                            SyntaxFactory.GenericName(SyntaxFactory.Identifier("Any"), typeArguments))));
-                        return newArg;
-                    }
+                    MemberAccessExpressionSyntax memberAccess => memberAccess.Expression,
+                    InvocationExpressionSyntax invocationExpression => (invocationExpression.Expression as MemberAccessExpressionSyntax)?.Expression,
+                    _ => null
+                };
+
+                if (beginExpression is GenericNameSyntax argGenericArgument)
+                {
+                    var typeArguments = argGenericArgument.TypeArgumentList;
+                    var newArg = SyntaxFactory.Argument(
+                        SyntaxFactory.InvocationExpression(
+                        SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
+                            SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, SyntaxFactory.IdentifierName("NSubstitute"),
+                        SyntaxFactory.IdentifierName("Arg")),
+                        SyntaxFactory.GenericName(SyntaxFactory.Identifier("Any"), typeArguments))));
+
+                    if (outParam)
+                        newArg = newArg.WithRefKindKeyword(SyntaxFactory.Token(SyntaxKind.OutKeyword));
+                    return newArg;
                 }
             }
             return argument;

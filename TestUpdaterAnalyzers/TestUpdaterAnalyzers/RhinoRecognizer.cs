@@ -1,4 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
+using System;
 
 namespace TestUpdaterAnalyzers
 {
@@ -19,6 +20,9 @@ namespace TestUpdaterAnalyzers
         public static bool TestIsArgProperty(IPropertySymbol propertySymbol) =>
             TestSymbol(propertySymbol, "Is", "Arg");
 
+        public static bool TestOutArgMethod(IMethodSymbol propertySymbol) =>
+            TestSymbol(propertySymbol, "Out", "Arg");
+
         public static bool TestAnythingProperty(IPropertySymbol propertySymbol) =>
             TestSymbol(propertySymbol, "Anything", "IsArg");
 
@@ -37,6 +41,9 @@ namespace TestUpdaterAnalyzers
         public static bool TestOutRefProperty(IMethodSymbol memberSymbol) =>
             TestSymbol(memberSymbol, "OutRef", "IMethodOptions");
 
+        public static bool TestDummyField(IFieldSymbol fieldSymbol) =>
+            TestSymbol(fieldSymbol, "Dummy", "OutRefArgDummy");
+
         public static bool TestAnyRepeatOptionsMethod(IMethodSymbol memberSymbol) =>
             TestAnySymbol(memberSymbol, "IRepeat");
 
@@ -52,6 +59,5 @@ namespace TestUpdaterAnalyzers
             return symbolsType.OriginalDefinition.ContainingAssembly.MetadataName == assembly
                 && symbolsType.OriginalDefinition.ContainingType.Name == type;
         }
-
     }
 }
