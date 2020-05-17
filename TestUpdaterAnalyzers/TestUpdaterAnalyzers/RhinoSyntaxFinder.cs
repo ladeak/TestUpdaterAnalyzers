@@ -54,11 +54,11 @@ namespace TestUpdaterAnalyzers
                 var memberSymbol = symbolInfo.Symbol as IMethodSymbol ?? symbolInfo.CandidateSymbols.OfType<IMethodSymbol>().FirstOrDefault();
                 if (memberSymbol != null)
                 {
-                    if (RhinoRecognizer.TestReturnMethod(memberSymbol))
+                    if (RhinoRecognizer.IsReturnMethod(memberSymbol))
                     {
                         SetTargetNode(memberAccessExpr);
                     }
-                    else if (RhinoRecognizer.TestExpectMethod(memberSymbol) || RhinoRecognizer.TestStubMethod(memberSymbol))
+                    else if (RhinoRecognizer.IsExpectMethod(memberSymbol) || RhinoRecognizer.IsStubMethod(memberSymbol))
                     {
                         SetTargetNode(memberAccessExpr);
                         if (memberAccessExpr.Expression is IdentifierNameSyntax identifier)
@@ -68,15 +68,15 @@ namespace TestUpdaterAnalyzers
                                 _localScope = false;
                         }
                     }
-                    else if (RhinoRecognizer.TestGenerateMockMethod(memberSymbol))
+                    else if (RhinoRecognizer.IsGenerateMockMethod(memberSymbol))
                     {
                         SetTargetNode(memberAccessExpr);
                     }
-                    else if (RhinoRecognizer.TestGenerateStubMethod(memberSymbol))
+                    else if (RhinoRecognizer.IsGenerateStubMethod(memberSymbol))
                     {
                         SetTargetNode(memberAccessExpr);
                     }
-                    else if (RhinoRecognizer.TestThrowMethod(memberSymbol))
+                    else if (RhinoRecognizer.IsThrowMethod(memberSymbol))
                     {
                         SetTargetNode(memberAccessExpr);
                     }
@@ -93,10 +93,10 @@ namespace TestUpdaterAnalyzers
                 var argumentSymbol = _semantics.GetSymbolInfo(argumentExpr).Symbol as IPropertySymbol;
                 if (argumentSymbol != null)
                 {
-                    if (RhinoRecognizer.TestAnythingProperty(argumentSymbol))
+                    if (RhinoRecognizer.IsAnythingProperty(argumentSymbol))
                     {
                         var innerSymbol = _semantics.GetSymbolInfo(argumentExpr.Expression).Symbol as IPropertySymbol;
-                        if (RhinoRecognizer.TestIsArgProperty(innerSymbol))
+                        if (RhinoRecognizer.IsIsArgProperty(innerSymbol))
                         {
                             SetTargetNode(argumentExpr);
                         }

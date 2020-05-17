@@ -68,7 +68,27 @@ namespace RhinoXUnitFixture
             Assert.Equal(5, result);
         }
 
-        // Out argument
+        [Fact]
+        public void VerifyAllExpectations()
+        {
+            var mock = MockRepository.GenerateMock<IValidator>();
+            mock.Expect(x => x.Validate(Arg<Request>.Is.Anything)).Return(true);
+            var sut = new BusinessLogic(mock);
+            sut.CalculateId(new Request() { Age = 1, Height = 1, Name = "test" });
+            mock.VerifyAllExpectations();
+        }
+
+        [Fact]
+        public void AssertWasCalled()
+        {
+            var mock = MockRepository.GenerateMock<IValidator>();
+            mock.Expect(x => x.Validate(Arg<Request>.Is.Anything)).Return(true);
+            var sut = new BusinessLogic(mock);
+            sut.CalculateId(new Request() { Age = 1, Height = 1, Name = "test" });
+            mock.AssertWasCalled(x => x.Validate(Arg<Request>.Is.Anything));
+            mock.AssertWasNotCalled(x => x.TryValidate(Arg<Request>.Is.Anything, out Arg<bool>.Out(true).Dummy));
+        }
+
         // AssertWasCalled
         // AssertWasNotCalled
         // Do

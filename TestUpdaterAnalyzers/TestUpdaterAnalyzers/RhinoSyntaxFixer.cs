@@ -16,7 +16,7 @@ namespace TestUpdaterAnalyzers
 
         public async Task<Document> WalkAsync(SyntaxNode node, bool localScope)
         {
-            var rewriter = new RhinoInvocationSyntaxRewriter(_semanticModel);
+            var rewriter = new RhinoSyntaxRewriter(_semanticModel);
             var newRoot = rewriter.Rewrite(await _document.GetSyntaxRootAsync());
             _document = _document.WithSyntaxRoot(newRoot);
 
@@ -25,6 +25,8 @@ namespace TestUpdaterAnalyzers
             documentUpdater.AddNSubstituteUsing();
             if (rewriter.UseExceptionExtensions)
                 documentUpdater.AddNSubstituteExceptionExtensionsUsing();
+            if (rewriter.UseReceivedExtensions)
+                documentUpdater.AddNSubstituteReceivedExtensionsUsing();
             _document = documentUpdater.Complete();
             return _document;
         }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace TestUpdaterAnalyzers
 {
-    public class InvocationData
+    public class InvocationFixContextData
     {
         public bool UseAnyArgs { get; set; }
 

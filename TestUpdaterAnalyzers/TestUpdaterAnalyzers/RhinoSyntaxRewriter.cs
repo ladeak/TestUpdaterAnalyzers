@@ -7,12 +7,13 @@ using System.Linq;
 
 namespace TestUpdaterAnalyzers
 {
-    public class RhinoInvocationSyntaxRewriter : CSharpSyntaxRewriter
+    public class RhinoSyntaxRewriter : CSharpSyntaxRewriter
     {
         private SemanticModel _originalSemantics;
-        private SyntaxWalkContext<InvocationData> _currentInvocationContext = new SyntaxWalkContext<InvocationData>();
+        private SyntaxWalkContext<InvocationFixContextData> _invocationContext = new SyntaxWalkContext<InvocationFixContextData>();
+        private SyntaxWalkContext<MethodFixContextData> _methodContext = new SyntaxWalkContext<MethodFixContextData>();
 
-        public RhinoInvocationSyntaxRewriter(SemanticModel semanticModel)
+        public RhinoSyntaxRewriter(SemanticModel semanticModel)
         {
             _originalSemantics = semanticModel;
         }
@@ -24,12 +25,21 @@ namespace TestUpdaterAnalyzers
 
         public bool UseExceptionExtensions { get; private set; }
 
+        public bool UseReceivedExtensions { get; private set; }
+
+        public override SyntaxNode VisitMethodDeclaration(MethodDeclarationSyntax node)
+        {
+            using (_methodContext.Enter())
+            {
+                node = base.VisitMethodDeclaration(node) as MethodDeclarationSyntax;
+                return CompleteVerifyAllStatements(node);
+            }
+        }
 
         public override SyntaxNode VisitInvocationExpression(InvocationExpressionSyntax invocationExpr)
         {
-            try
+            using (_invocationContext.Enter())
             {
-                _currentInvocationContext.Enter();
                 var memberAccessExpr = invocationExpr.Expression as MemberAccessExpressionSyntax;
                 if (memberAccessExpr != null)
                 {
@@ -41,63 +51,59 @@ namespace TestUpdaterAnalyzers
                     var originalMemberSymbol = originalSymbolInfo.Symbol as IMethodSymbol ?? originalSymbolInfo.CandidateSymbols.OfType<IMethodSymbol>().FirstOrDefault();
                     if (originalMemberSymbol != null)
                     {
-                        if (RhinoRecognizer.TestReturnMethod(originalMemberSymbol))
+                        if (RhinoRecognizer.IsReturnMethod(originalMemberSymbol))
                         {
                             invocationExpr = invocationExpr.WithArgumentList(ReWriteOutRefArguments(invocationExpr));
-                            if (_currentInvocationContext.Data.UseAnyArgs)
+                            if (_invocationContext.Current.UseAnyArgs)
                                 return invocationExpr.WithExpression(UseReturnsForAnyArgs(memberAccessExpr));
                             else
                                 return invocationExpr.WithExpression(UseReturns(memberAccessExpr));
 
                         }
-                        if (RhinoRecognizer.TestExpectMethod(originalMemberSymbol) || RhinoRecognizer.TestStubMethod(originalMemberSymbol))
+                        if (RhinoRecognizer.IsExpectMethod(originalMemberSymbol) || RhinoRecognizer.IsStubMethod(originalMemberSymbol))
                         {
                             return DropExpectOrStubCall(memberAccessExpr);
                         }
-                        if (RhinoRecognizer.TestGenerateMockMethod(originalMemberSymbol) || RhinoRecognizer.TestGenerateStubMethod(originalMemberSymbol))
+                        if (RhinoRecognizer.IsGenerateMockMethod(originalMemberSymbol) || RhinoRecognizer.IsGenerateStubMethod(originalMemberSymbol))
                         {
                             return UseSubstituteFor(memberAccessExpr);
                         }
-                        if (RhinoRecognizer.TestThrowMethod(originalMemberSymbol))
+                        if (RhinoRecognizer.IsThrowMethod(originalMemberSymbol))
                         {
                             UseExceptionExtensions = true;
-                            if (_currentInvocationContext.Data.UseAnyArgs)
+                            if (_invocationContext.Current.UseAnyArgs)
                                 return invocationExpr.WithExpression(UseThrowsForAnyArgs(memberAccessExpr));
                             else
                                 return invocationExpr.WithExpression(UseThrows(memberAccessExpr));
                         }
-                        if (RhinoRecognizer.TestIgnoreArgumentsMethod(originalMemberSymbol)
+                        if (RhinoRecognizer.IsIgnoreArgumentsMethod(originalMemberSymbol)
                             && invocationExpr.Expression is MemberAccessExpressionSyntax ignoreArgumentsMemberExpression
                             && ignoreArgumentsMemberExpression.Expression is InvocationExpressionSyntax innerIgnoreArgumentsInvocationExpression)
                         {
-                            _currentInvocationContext.Data.UseAnyArgs = true;
+                            _invocationContext.Current.UseAnyArgs = true;
                             return innerIgnoreArgumentsInvocationExpression;
                         }
-                        if (RhinoRecognizer.TestAnyRepeatOptionsMethod(originalMemberSymbol)
+                        if (RhinoRecognizer.IsAnyRepeatOptionsMethod(originalMemberSymbol)
                             && invocationExpr.Expression is MemberAccessExpressionSyntax repeatOptionMemberAccess
                             && repeatOptionMemberAccess.Expression is MemberAccessExpressionSyntax repeatMemberAccess
                             && repeatMemberAccess.Expression != null)
                         {
                             return repeatMemberAccess.Expression;
                         }
-                        if (RhinoRecognizer.TestOutRefProperty(originalMemberSymbol)
+                        if (RhinoRecognizer.IsOutRefProperty(originalMemberSymbol)
                             && invocationExpr.Expression is MemberAccessExpressionSyntax outRefMemberExpression
                             && outRefMemberExpression.Expression is InvocationExpressionSyntax outRefInnerInvocationExpression)
                         {
-                            _currentInvocationContext.Data.OutRefArguments.AddRange(invocationExpr.ArgumentList.Arguments.Select(x => x.Expression));
+                            _invocationContext.Current.OutRefArguments.AddRange(invocationExpr.ArgumentList.Arguments.Select(x => x.Expression));
                             return outRefInnerInvocationExpression;
+                        }
+                        if (RhinoRecognizer.IsVerifyAllExpectationsMethod(originalMemberSymbol))
+                        {
+                            return UseReceivedOnMethodContext(invocationExpr);
                         }
                     }
                 }
                 return invocationExpr;
-            }
-            catch (Exception e)
-            {
-                throw;
-            }
-            finally
-            {
-                _currentInvocationContext.Exit();
             }
         }
 
@@ -109,10 +115,10 @@ namespace TestUpdaterAnalyzers
                 var argumentSymbol = _originalSemantics.GetSymbolInfo(argumentExpr).Symbol;
                 if (argumentSymbol is IPropertySymbol propertySymbol)
                 {
-                    if (RhinoRecognizer.TestAnythingProperty(propertySymbol))
+                    if (RhinoRecognizer.IsAnythingProperty(propertySymbol))
                     {
                         var innerSymbol = _originalSemantics.GetSymbolInfo(argumentExpr.Expression).Symbol as IPropertySymbol;
-                        if (RhinoRecognizer.TestIsArgProperty(innerSymbol))
+                        if (RhinoRecognizer.IsIsArgProperty(innerSymbol))
                         {
                             return UseArgsAny(node);
                         }
@@ -121,12 +127,12 @@ namespace TestUpdaterAnalyzers
 
                 if (node.RefKindKeyword.IsKind(SyntaxKind.OutKeyword) && argumentSymbol is IFieldSymbol fieldSymbol)
                 {
-                    if (RhinoRecognizer.TestDummyField(fieldSymbol))
+                    if (RhinoRecognizer.IsDummyField(fieldSymbol))
                     {
                         var outMethodSymbol = _originalSemantics.GetSymbolInfo(argumentExpr.Expression).Symbol as IMethodSymbol;
-                        if (RhinoRecognizer.TestOutArgMethod(outMethodSymbol) && argumentExpr.Expression is InvocationExpressionSyntax outMethodInvocation)
+                        if (RhinoRecognizer.IsOutArgMethod(outMethodSymbol) && argumentExpr.Expression is InvocationExpressionSyntax outMethodInvocation)
                         {
-                            _currentInvocationContext.Data.OutRefArguments.Add(outMethodInvocation.ArgumentList.Arguments.First().Expression);
+                            _invocationContext.Current.OutRefArguments.Add(outMethodInvocation.ArgumentList.Arguments.First().Expression);
                             return UseArgsAny(node, true);
                         }
                     }
@@ -137,9 +143,9 @@ namespace TestUpdaterAnalyzers
 
 
 
-        private SyntaxNode DropExpectOrStubCall(SyntaxNode parentNode)
+        private SyntaxNode DropExpectOrStubCall(MemberAccessExpressionSyntax parentNode)
         {
-            var mockedObjectIdentifier = (parentNode as MemberAccessExpressionSyntax).Expression as IdentifierNameSyntax;
+            var mockedObjectIdentifier = parentNode.Expression as IdentifierNameSyntax;
 
             var expectInvocationExpression = parentNode.Parent as InvocationExpressionSyntax;
             if (expectInvocationExpression == null)
@@ -152,7 +158,16 @@ namespace TestUpdaterAnalyzers
             var invocation = SyntaxFactory.InvocationExpression(SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
                 mockedObjectIdentifier, mockedMethod.Name), mockMethodInvocation.ArgumentList);
 
-            _currentInvocationContext.Data.OriginalArguments.AddRange(mockMethodInvocation.ArgumentList.Arguments);
+            _invocationContext.Current.OriginalArguments.AddRange(mockMethodInvocation.ArgumentList.Arguments);
+
+            if (parentNode.Name.Identifier.ValueText == "Expect")
+            {
+                var receivedInvocation = SyntaxFactory.InvocationExpression(SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
+                    mockedObjectIdentifier, SyntaxFactory.IdentifierName("Received")));
+                var assertInvocation = SyntaxFactory.InvocationExpression(SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
+                    receivedInvocation, mockedMethod.Name), mockMethodInvocation.ArgumentList);
+                _methodContext.Current.Add(mockedObjectIdentifier.Identifier.ValueText, assertInvocation);
+            }
             return invocation;
         }
 
@@ -168,17 +183,17 @@ namespace TestUpdaterAnalyzers
 
         private ArgumentListSyntax ReWriteOutRefArguments(InvocationExpressionSyntax invocation)
         {
-            if (!_currentInvocationContext.Data.OutRefArguments.Any()
-                || !_currentInvocationContext.Data.OriginalArguments.Any())
+            if (!_invocationContext.Current.OutRefArguments.Any()
+                || !_invocationContext.Current.OriginalArguments.Any())
                 return invocation.ArgumentList;
 
             var paramToken = SyntaxFactory.ParseToken("c");
 
             int currentOutArgumentIndex = 0;
             List<StatementSyntax> statements = new List<StatementSyntax>();
-            foreach (var outArg in _currentInvocationContext.Data.OutRefArguments)
+            foreach (var outArg in _invocationContext.Current.OutRefArguments)
             {
-                currentOutArgumentIndex = _currentInvocationContext.Data.OriginalArguments.FindIndex(currentOutArgumentIndex, x => x.RefKindKeyword.IsKind(SyntaxKind.OutKeyword));
+                currentOutArgumentIndex = _invocationContext.Current.OriginalArguments.FindIndex(currentOutArgumentIndex, x => x.RefKindKeyword.IsKind(SyntaxKind.OutKeyword));
                 var indexToken = SyntaxFactory.ParseToken(currentOutArgumentIndex.ToString());
                 var outParamAssignment = SyntaxFactory.ExpressionStatement(
                     SyntaxFactory.AssignmentExpression(SyntaxKind.SimpleAssignmentExpression,
@@ -227,6 +242,29 @@ namespace TestUpdaterAnalyzers
             return memberAccess.Parent;
         }
 
+        private SyntaxNode UseReceivedOnMethodContext(InvocationExpressionSyntax verifyInvocationNode)
+        {
+            if (verifyInvocationNode.Expression is MemberAccessExpressionSyntax verifyMemberAccess)
+            {
+                if (verifyMemberAccess.Expression is IdentifierNameSyntax mockIdentifier)
+                {
+                    var token = mockIdentifier.Identifier;
+                    if (_methodContext.Current.TakeFirst(token.ValueText, out var firstInvocation))
+                        return firstInvocation;
+                }
+            }
+            return verifyInvocationNode;
+        }
+
+        private SyntaxNode CompleteVerifyAllStatements(MethodDeclarationSyntax node)
+        {
+            var statements = node.Body.Statements;
+            foreach (var receivedCall in _methodContext.Current.TakeRest())
+                statements = statements.Add(SyntaxFactory.ExpressionStatement(receivedCall));
+            node = node.WithBody(node.Body.WithStatements(statements));
+            return node;
+        }
+
         public SyntaxNode UseArgsAny(ArgumentSyntax argument, bool outParam = false)
         {
             if (argument.Expression is MemberAccessExpressionSyntax finalMemberAccess)
@@ -255,6 +293,7 @@ namespace TestUpdaterAnalyzers
             }
             return argument;
         }
+
 
     }
 }

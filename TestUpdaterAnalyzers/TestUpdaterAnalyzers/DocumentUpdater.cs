@@ -47,5 +47,17 @@ namespace TestUpdaterAnalyzers
                 _editor.InsertBefore((_editor.OriginalRoot as CompilationUnitSyntax).Usings.FirstOrDefault(), newUsing);
             }
         }
+
+        public void AddNSubstituteReceivedExtensionsUsing()
+        {
+            CompilationUnitSyntax root = _editor.GetChangedRoot() as CompilationUnitSyntax;
+            if (!root.Usings.Any(x => x.Name.GetText().ToString() == "NSubstitute.ReceivedExtensions"))
+            {
+                var newUsing = SyntaxFactory.UsingDirective(SyntaxFactory.QualifiedName(
+                    SyntaxFactory.IdentifierName("NSubstitute"),
+                    SyntaxFactory.IdentifierName("ReceivedExtensions")));
+                _editor.InsertBefore((_editor.OriginalRoot as CompilationUnitSyntax).Usings.FirstOrDefault(), newUsing);
+            }
+        }
     }
 }

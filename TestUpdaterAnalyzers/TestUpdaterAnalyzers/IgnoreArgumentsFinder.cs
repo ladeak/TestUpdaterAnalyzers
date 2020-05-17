@@ -31,7 +31,7 @@ namespace TestUpdaterAnalyzers
                 var memberSymbol = symbolInfo.Symbol as IMethodSymbol ?? symbolInfo.CandidateSymbols.SingleOrDefault() as IMethodSymbol;
                 if (memberSymbol != null)
                 {
-                    if (RhinoRecognizer.TestIgnoreArgumentsMethod(memberSymbol))
+                    if (RhinoRecognizer.IsIgnoreArgumentsMethod(memberSymbol))
                     {
                         _innerChild = memberAccessExpr;
                         return;
