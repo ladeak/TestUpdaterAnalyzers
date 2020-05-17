@@ -110,10 +110,60 @@ namespace RhinoXUnitFixture
             Assert.True(result);
         }
 
+        [Fact]
+        public void Arg_ArgumentNull()
+        {
+            var mock = MockRepository.GenerateMock<IValidator>();
+            mock.Expect(x => x.Validate(Arg<Request>.Is.Null)).Return(true);
+            var sut = new BusinessLogic(mock);
+            Assert.Throws<NullReferenceException>(() => sut.CalculateId(null));
+        }
+
+        [Fact]
+        public void Arg_ArgumentNotNull()
+        {
+            var mock = MockRepository.GenerateMock<IValidator>();
+            mock.Expect(x => x.Validate(Arg<Request>.Is.NotNull)).Return(true);
+            var sut = new BusinessLogic(mock);
+            var result = sut.CalculateId(new Request() { Age = 1, Height = 1, Name = "test" });
+            Assert.Equal(5, result);
+        }
+
+        [Fact]
+        public void Arg_ArgumentEqual()
+        {
+            var mock = MockRepository.GenerateMock<IValidator>();
+            var request = new Request() { Age = 1, Height = 1, Name = "test" };
+            mock.Expect(x => x.Validate(Arg<Request>.Is.Equal(request))).Return(true);
+            var sut = new BusinessLogic(mock);
+            var result = sut.CalculateId(request);
+            Assert.Equal(5, result);
+        }
+
+        [Fact]
+        public void Arg_ArgumentSame()
+        {
+            var mock = MockRepository.GenerateMock<IValidator>();
+            var request = new Request() { Age = 1, Height = 1, Name = "test" };
+            mock.Expect(x => x.Validate(Arg<Request>.Is.Same(request))).Return(true);
+            var sut = new BusinessLogic(mock);
+            var result = sut.CalculateId(request);
+            Assert.Equal(5, result);
+        }
+
+        [Fact]
+        public void Arg_ArgumentMatches()
+        {
+            var mock = MockRepository.GenerateMock<IValidator>();
+            mock.Expect(x => x.Validate(Arg<Request>.Matches(y => y.Name == "test"))).Return(true);
+            var sut = new BusinessLogic(mock);
+            var result = sut.CalculateId(new Request() { Age = 1, Height = 1, Name = "test" });
+            Assert.Equal(5, result);
+        }
+
         // Do
-        // PropertyBehavior
         // WhenCalled
-        // Arguments: Matches, Is (Null, NotNull, Typeof, Equal, Same), Ref
+
 
         [Fact]
         public void WhenValid_IdCalculated()
