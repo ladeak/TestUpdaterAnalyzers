@@ -1,4 +1,6 @@
-﻿using Microsoft.CodeAnalysis.CSharp.Syntax;
+﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
 
 namespace TestUpdaterAnalyzers
@@ -38,5 +40,7 @@ namespace TestUpdaterAnalyzers
         }
 
         public HashSet<InvocationExpressionSyntax> RemovableExpressions { get; } = new HashSet<InvocationExpressionSyntax>();
+
+        public SyntaxToken LambdaToken { get; set; } = SyntaxFactory.Identifier("a0");
     }
 }

@@ -102,7 +102,7 @@ namespace RhinoXUnitFixture
         public void Arg_ArgumentNull()
         {
             var mock = Substitute.For<IValidator>();
-            mock.Validate(Arg.Is<Request>(x => x == null)).Returns(true);
+            mock.Validate(Arg.Is<Request>(aa1 => aa1 == null)).Returns(true);
             var sut = new BusinessLogic(mock);
             Assert.Throws<NullReferenceException>(() => sut.CalculateId(null));
         }

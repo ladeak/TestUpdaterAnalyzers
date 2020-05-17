@@ -1,13 +1,8 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Rename;
-using NSubstitute;
-using NSubstitute.Core;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 
 namespace TestUpdaterAnalyzers
 {
@@ -35,9 +30,17 @@ namespace TestUpdaterAnalyzers
         {
             using (_methodContext.Enter())
             {
+                FindEmptySyntaxToken(node);
                 node = base.VisitMethodDeclaration(node) as MethodDeclarationSyntax;
                 return CompleteVerifyAllStatements(node);
             }
+        }
+
+        private void FindEmptySyntaxToken(MethodDeclarationSyntax node)
+        {
+            int i = 0;
+            while (node.DescendantTokens().Any(x => x.IsKind(SyntaxKind.IdentifierToken) && x.ValueText == _methodContext.Current.LambdaToken.ValueText))
+                _methodContext.Current.LambdaToken = SyntaxFactory.Identifier($"a{++i}");
         }
 
         public override SyntaxNode VisitInvocationExpression(InvocationExpressionSyntax invocationExpr)
@@ -137,6 +140,22 @@ namespace TestUpdaterAnalyzers
                         if (RhinoRecognizer.IsIsArgProperty(innerSymbol))
                         {
                             return UseArgsAny(node);
+                        }
+                    }
+                    if (RhinoRecognizer.IsNullArgProperty(propertySymbol))
+                    {
+                        var innerSymbol = _originalSemantics.GetSymbolInfo(argumentExpr.Expression).Symbol as IPropertySymbol;
+                        if (RhinoRecognizer.IsIsArgProperty(innerSymbol))
+                        {
+                            return UseArgWith(node, GetEqualsNullArgument(_methodContext.Current.LambdaToken));
+                        }
+                    }
+                    if (RhinoRecognizer.IsNotNullArgProperty(propertySymbol))
+                    {
+                        var innerSymbol = _originalSemantics.GetSymbolInfo(argumentExpr.Expression).Symbol as IPropertySymbol;
+                        if (RhinoRecognizer.IsIsArgProperty(innerSymbol))
+                        {
+                            return UseArgWith(node, GetEqualsNotNullArgument(_methodContext.Current.LambdaToken));
                         }
                     }
                 }
@@ -369,6 +388,45 @@ namespace TestUpdaterAnalyzers
             return argument;
         }
 
+        public SyntaxNode UseArgWith(ArgumentSyntax argument, ArgumentListSyntax lambdaArgument)
+        {
+            if (argument.Expression is MemberAccessExpressionSyntax finalMemberAccess)
+            {
+                var beginExpression = finalMemberAccess.Expression switch
+                {
+                    MemberAccessExpressionSyntax memberAccess => memberAccess.Expression,
+                    InvocationExpressionSyntax invocationExpression => (invocationExpression.Expression as MemberAccessExpressionSyntax)?.Expression,
+                    _ => null
+                };
 
+                if (beginExpression is GenericNameSyntax argGenericArgument)
+                {
+                    var typeArguments = argGenericArgument.TypeArgumentList;
+                    var newArg = SyntaxFactory.Argument(
+                        SyntaxFactory.InvocationExpression(
+                        SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
+                            SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, SyntaxFactory.IdentifierName("NSubstitute"),
+                        SyntaxFactory.IdentifierName("Arg")),
+                        SyntaxFactory.GenericName(SyntaxFactory.Identifier("Is"), typeArguments)), lambdaArgument));
+                    return newArg;
+                }
+            }
+            return argument;
+        }
+
+        private static ArgumentListSyntax GetEqualsNullArgument(SyntaxToken token)
+        {
+            return SyntaxFactory.ArgumentList(SyntaxFactory.SingletonSeparatedList(
+                SyntaxFactory.Argument(SyntaxFactory.SimpleLambdaExpression(SyntaxFactory.Parameter(token),
+                SyntaxFactory.BinaryExpression(SyntaxKind.EqualsExpression, SyntaxFactory.IdentifierName(token), SyntaxFactory.LiteralExpression(SyntaxKind.NullLiteralExpression))))));
+        }
+
+        private static ArgumentListSyntax GetEqualsNotNullArgument(SyntaxToken token)
+        {
+            return SyntaxFactory.ArgumentList(SyntaxFactory.SingletonSeparatedList(
+                SyntaxFactory.Argument(
+                    SyntaxFactory.SimpleLambdaExpression(SyntaxFactory.Parameter(token),
+                    SyntaxFactory.BinaryExpression(SyntaxKind.NotEqualsExpression, SyntaxFactory.IdentifierName(token), SyntaxFactory.LiteralExpression(SyntaxKind.NullLiteralExpression))))));
+        }
     }
 }

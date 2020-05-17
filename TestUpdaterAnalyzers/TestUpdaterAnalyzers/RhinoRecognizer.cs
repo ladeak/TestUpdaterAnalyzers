@@ -31,6 +31,12 @@ namespace TestUpdaterAnalyzers
         public static bool IsAnythingProperty(IPropertySymbol propertySymbol) =>
             IsSymbol(propertySymbol, "Anything", "IsArg");
 
+        public static bool IsNullArgProperty(IPropertySymbol propertySymbol) =>
+            IsSymbol(propertySymbol, "Null", "IsArg");
+
+        public static bool IsNotNullArgProperty(IPropertySymbol propertySymbol) =>
+            IsSymbol(propertySymbol, "NotNull", "IsArg");
+
         public static bool IsGenerateStubMethod(IMethodSymbol memberSymbol) =>
           IsSymbol(memberSymbol, "GenerateStub", "MockRepository");
 

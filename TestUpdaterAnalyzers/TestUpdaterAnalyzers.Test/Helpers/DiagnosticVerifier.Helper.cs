@@ -176,6 +176,7 @@ namespace TestHelper
                 .AddRuntimeLibrary(projectId, "System.Core.dll")
                 .AddRuntimeLibrary(projectId, "mscorlib.dll")
                 .AddRuntimeLibrary(projectId, "System.Threading.Tasks.Extensions.dll")
+                .AddRuntimeLibrary(projectId, "System.Linq.Expressions.dll")
                 .AddRuntimeLibrary(projectId, "System.Runtime.dll");
             solution = solution.WithProjectCompilationOptions(projectId, solution.GetProject(projectId).CompilationOptions
                 .WithOutputKind(OutputKind.DynamicallyLinkedLibrary));

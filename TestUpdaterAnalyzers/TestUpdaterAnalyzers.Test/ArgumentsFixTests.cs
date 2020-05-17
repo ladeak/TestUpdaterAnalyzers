@@ -26,7 +26,7 @@ namespace RhinoXUnitFixture
             var mock = MockRepository.GenerateMock<IValidator>();
             mock.Expect(x => x.Validate(Arg<Request>.Is.Null)).Return(true);
             var sut = new BusinessLogic(mock);
-            Assert.Throws<NullReferenceException>(() => sut.CalculateId(null));
+            sut.CalculateId(null);
         }
     }
 }
@@ -47,9 +47,9 @@ namespace RhinoXUnitFixture
         public void WhenValid_IdCalculated()
         {
             var mock = Substitute.For<IValidator>();
-            mock.Validate(Arg.Is<Request>(x => x == null)).Returns(true);
+            mock.Validate(NSubstitute.Arg.Is<Request>(a0 => a0 == null)).Returns(true);
             var sut = new BusinessLogic(mock);
-            Assert.Throws<NullReferenceException>(() => sut.CalculateId(null));
+            sut.CalculateId(null);
         }
     }
 }
@@ -97,7 +97,7 @@ namespace RhinoXUnitFixture
         public void WhenValid_IdCalculated()
         {
             var mock = Substitute.For<IValidator>();
-            mock.Validate(Arg.Is<Request>(x => x != null)).Returns(true);
+            mock.Validate(NSubstitute.Arg.Is<Request>(a0 => a0 != null)).Returns(true);
             var sut = new BusinessLogic(mock);
             var result = sut.CalculateId(new Request() { Age = 1, Height = 1, Name = ""test"" });
             Assert.Equal(5, result);
@@ -150,7 +150,7 @@ namespace RhinoXUnitFixture
         {
             var mock = Substitute.For<IValidator>();
             var request = new Request() { Age = 1, Height = 1, Name = ""test"" };
-            mock.Validate(Arg.Is<Request>(x => x == request)).Returns(true);
+            mock.Validate(NSubstitute.Arg.Is<Request>(a0 => a0 == request)).Returns(true);
             var sut = new BusinessLogic(mock);
             var result = sut.CalculateId(request);
             Assert.Equal(5, result);
@@ -203,7 +203,7 @@ namespace RhinoXUnitFixture
         {
             var mock = Substitute.For<IValidator>();
             var request = new Request() { Age = 1, Height = 1, Name = ""test"" };
-            mock.Validate(Arg.Is<Request>(x => ReferenceEquals(x, request))).Returns(true);
+            mock.Validate(NSubstitute.Arg.Is<Request>(a0 => ReferenceEquals(a0, request))).Returns(true);
             var sut = new BusinessLogic(mock);
             var result = sut.CalculateId(request);
             Assert.Equal(5, result);
@@ -254,7 +254,7 @@ namespace RhinoXUnitFixture
         public void WhenValid_IdCalculated()
         {
             var mock = Substitute.For<IValidator>();
-            mock.Validate(Arg.Is<Request>(y => y.Name == ""test"")).Returns(true);
+            mock.Validate(NSubstitute.Arg.Is<Request>(a0 => a0.Name == ""test"")).Returns(true);
             var sut = new BusinessLogic(mock);
             var result = sut.CalculateId(new Request() { Age = 1, Height = 1, Name = ""test"" });
             Assert.Equal(5, result);
