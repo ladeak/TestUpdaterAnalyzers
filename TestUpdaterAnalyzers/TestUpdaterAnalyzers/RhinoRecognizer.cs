@@ -16,6 +16,12 @@ namespace TestUpdaterAnalyzers
         public static bool IsStubMethod(IMethodSymbol memberSymbol) =>
             IsSymbol(memberSymbol, "Stub", "RhinoMocksExtensions");
 
+        public static bool IsAssertWasCalledMethod(IMethodSymbol memberSymbol) =>
+            IsSymbol(memberSymbol, "AssertWasCalled", "RhinoMocksExtensions");
+
+        public static bool IsAssertWasNotCalledMethod(IMethodSymbol memberSymbol) =>
+            IsSymbol(memberSymbol, "AssertWasNotCalled", "RhinoMocksExtensions");
+
         public static bool IsIsArgProperty(IPropertySymbol propertySymbol) =>
             IsSymbol(propertySymbol, "Is", "Arg");
 
