@@ -89,12 +89,30 @@ namespace RhinoXUnitFixture
             mock.AssertWasNotCalled(x => x.TryValidate(Arg<Request>.Is.Anything, out Arg<bool>.Out(true).Dummy));
         }
 
-        // AssertWasCalled
-        // AssertWasNotCalled
+        [Fact]
+        public void PropertyBehavior()
+        {
+            var mock = MockRepository.GenerateMock<IValidator>();
+            mock.Expect(x => x.IsEmptyNameValid).PropertyBehavior();
+            mock.IsEmptyNameValid = true;
+            var sut = new BusinessLogic(mock);
+            var result = sut.IsEmptyNameAllowed();
+            Assert.True(result);
+        }
+
+        [Fact]
+        public void ExpectOnProperty()
+        {
+            var mock = MockRepository.GenerateMock<IValidator>();
+            mock.Expect(x => x.IsEmptyNameValid).Return(true);
+            var sut = new BusinessLogic(mock);
+            var result = sut.IsEmptyNameAllowed();
+            Assert.True(result);
+        }
+
         // Do
         // PropertyBehavior
         // WhenCalled
-
         // Arguments: Matches, Is (Null, NotNull, Typeof, Equal, Same), Ref
 
         [Fact]

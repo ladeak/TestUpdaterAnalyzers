@@ -77,5 +77,25 @@ namespace RhinoXUnitFixture
             mock.Received().Validate(Arg.Any<Request>());
             mock.DidNotReceive().TryValidate(Arg.Any<Request>(), out Arg.Any<bool>());
         }
+
+        [Fact]
+        public void PropertyBehavior()
+        {
+            var mock = Substitute.For<IValidator>();
+            mock.IsEmptyNameValid = true;
+            var sut = new BusinessLogic(mock);
+            var result = sut.IsEmptyNameAllowed();
+            Assert.True(result);
+        }
+
+        [Fact]
+        public void ExpectOnProperty()
+        {
+            var mock = Substitute.For<IValidator>();
+            mock.IsEmptyNameValid.Returns(true);
+            var sut = new BusinessLogic(mock);
+            var result = sut.IsEmptyNameAllowed();
+            Assert.True(result);
+        }
     }
 }

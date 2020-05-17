@@ -1,11 +1,13 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Rename;
 using NSubstitute;
 using NSubstitute.Core;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 namespace TestUpdaterAnalyzers
 {
@@ -111,6 +113,10 @@ namespace TestUpdaterAnalyzers
                         {
                             return ExtractAssertCalledInvocation(memberAccessExpr, "AssertWasNotCalled", "DidNotReceive");
                         }
+                        if (RhinoRecognizer.IsPropertyBehavior(originalMemberSymbol))
+                        {
+                            return RemoveInvocation(invocationExpr);
+                        }
                     }
                 }
                 return invocationExpr;
@@ -155,67 +161,76 @@ namespace TestUpdaterAnalyzers
 
         private SyntaxNode ExtractExpectAndStubInvocation(MemberAccessExpressionSyntax parentNode)
         {
-            (IdentifierNameSyntax mockedObjectIdentifier, SimpleNameSyntax mockedMethodName, ArgumentListSyntax argumentList) = ExtractLambdaToParts(parentNode);
+            (IdentifierNameSyntax mockedObjectIdentifier, ArgumentListSyntax argumentList, ExpressionSyntax lambdaBody) = ExtractLambdaToParts(parentNode);
             if (mockedObjectIdentifier == null)
                 return parentNode.Parent;
 
-            InvocationExpressionSyntax invocation = CreateInvocationFromLambdaParts(mockedObjectIdentifier, mockedMethodName, argumentList);
+            // If Expect call, generate a syntax for VerifyAllExpectations calls.
+            if (parentNode.Name.Identifier.ValueText == "Expect")
+            {
+                (var assertInvocation, var assertKey) = PrepandCallToInvocation(mockedObjectIdentifier, "Received", lambdaBody);
+                _methodContext.Current.Add(assertKey, assertInvocation);
+            }
 
+            // If it is an empty Expect or Stub invocation, add removable statements.
+            if (parentNode.Parent.Parent is ExpressionStatementSyntax && parentNode.Parent is InvocationExpressionSyntax removableInvocation)
+            {
+                RemoveInvocation(removableInvocation);
+                return parentNode.Parent;
+            }
+
+            // Else create new invocation
+            ExpressionSyntax invocation = CreateInvocationFromLambdaParts(lambdaBody);
             if (argumentList != null)
                 _invocationContext.Current.OriginalArguments.AddRange(argumentList.Arguments);
 
-
-            if (parentNode.Name.Identifier.ValueText == "Expect")
-            {
-                (var assertInvocation, var assertKey) = PrepandCallToInvocation(mockedObjectIdentifier, mockedMethodName, argumentList, "Received");
-                _methodContext.Current.Add(assertKey, assertInvocation);
-            }
             return invocation;
         }
 
         private SyntaxNode ExtractAssertCalledInvocation(MemberAccessExpressionSyntax parentNode, string prepandInvocationFilter, string prepandCall)
         {
-            (IdentifierNameSyntax mockedObjectIdentifier, SimpleNameSyntax mockedMethodName, ArgumentListSyntax arguments) = ExtractLambdaToParts(parentNode);
+            (IdentifierNameSyntax mockedObjectIdentifier, ArgumentListSyntax arguments, ExpressionSyntax lambdaBody) = ExtractLambdaToParts(parentNode);
             if (mockedObjectIdentifier == null)
                 return parentNode.Parent;
 
             if (parentNode.Name.Identifier.ValueText == prepandInvocationFilter)
             {
-                (var fullInvocation, _) = PrepandCallToInvocation(mockedObjectIdentifier, mockedMethodName, arguments, prepandCall);
+                (var fullInvocation, _) = PrepandCallToInvocation(mockedObjectIdentifier, prepandCall, lambdaBody);
                 return fullInvocation;
             }
             return parentNode.Parent;
         }
 
-        private (IdentifierNameSyntax mockedObjectIdentifier, SimpleNameSyntax mockedMethodName, ArgumentListSyntax arguments) ExtractLambdaToParts(MemberAccessExpressionSyntax parentNode)
+        private (IdentifierNameSyntax mockedObjectIdentifier, ArgumentListSyntax arguments, ExpressionSyntax lambdaBody) ExtractLambdaToParts(MemberAccessExpressionSyntax parentNode)
         {
             var mockedObjectIdentifier = parentNode.Expression as IdentifierNameSyntax;
 
             var expectInvocationExpression = parentNode.Parent as InvocationExpressionSyntax;
             if (expectInvocationExpression == null)
                 return (null, null, null);
-            var argumentLambda = expectInvocationExpression.ArgumentList.Arguments.FirstOrDefault()?.Expression as LambdaExpressionSyntax;
-            var mockMethodInvocation = argumentLambda.Body as InvocationExpressionSyntax;
-            if (!(mockMethodInvocation?.Expression is MemberAccessExpressionSyntax mockedMethod))
-                return (null, null, null);
+            var argumentLambda = expectInvocationExpression.ArgumentList.Arguments.FirstOrDefault()?.Expression as SimpleLambdaExpressionSyntax;
 
-            return (mockedObjectIdentifier, mockedMethod.Name, mockMethodInvocation.ArgumentList);
+            var param = argumentLambda.Parameter.Identifier;
+            var tokens = argumentLambda.DescendantTokens().Where(x => x.Kind() == param.Kind() && x.ValueText == param.ValueText).ToList();
+            var renamedLambda = argumentLambda.ReplaceTokens(tokens, (_, __) => mockedObjectIdentifier.Identifier);
+
+            ArgumentListSyntax arguments = null;
+            var mockMethodInvocation = renamedLambda.Body as InvocationExpressionSyntax; // A method is mocked, attach arguments for out params processing.
+            if (mockMethodInvocation?.Expression is MemberAccessExpressionSyntax mockedMethod)
+                arguments = mockMethodInvocation.ArgumentList;
+            return (mockedObjectIdentifier, arguments, renamedLambda.Body as ExpressionSyntax);
         }
 
-        private static InvocationExpressionSyntax CreateInvocationFromLambdaParts(IdentifierNameSyntax mockedObjectIdentifier, SimpleNameSyntax mockedMethodName, ArgumentListSyntax arguments)
-        {
-            return SyntaxFactory.InvocationExpression(SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
-                mockedObjectIdentifier, mockedMethodName), arguments);
-        }
+        private static ExpressionSyntax CreateInvocationFromLambdaParts(ExpressionSyntax lambdaBody) => lambdaBody;
 
-        private (InvocationExpressionSyntax fullInvocation, string identifierToken) PrepandCallToInvocation(IdentifierNameSyntax mockedObjectIdentifier, SimpleNameSyntax mockedMethodName, ArgumentListSyntax arguments, string prepandCall)
+        private (ExpressionSyntax fullInvocation, string identifierToken) PrepandCallToInvocation(IdentifierNameSyntax mockedObjectIdentifier, string prepandCall, ExpressionSyntax lambdaBody)
         {
             var prependInvocation = SyntaxFactory.InvocationExpression(SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
                 mockedObjectIdentifier, SyntaxFactory.IdentifierName(prepandCall)));
-            var fullInvocation = SyntaxFactory.InvocationExpression(SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
-                prependInvocation, mockedMethodName), arguments);
-            var assertKey = mockedObjectIdentifier.Identifier.ValueText;
-            return (fullInvocation, assertKey);
+            var nameToken = lambdaBody.DescendantNodes().First(x => x.Kind() == mockedObjectIdentifier.Kind() && ((IdentifierNameSyntax)x).Identifier.ValueText == mockedObjectIdentifier.Identifier.ValueText);
+
+            var fullInvocation = lambdaBody.ReplaceNode(nameToken, prependInvocation);
+            return (fullInvocation, mockedObjectIdentifier.Identifier.ValueText);
         }
 
         private MemberAccessExpressionSyntax UseReturns(MemberAccessExpressionSyntax memberAccess)
@@ -303,9 +318,22 @@ namespace TestUpdaterAnalyzers
             return verifyInvocationNode;
         }
 
+        private SyntaxNode RemoveInvocation(InvocationExpressionSyntax invocationExpression)
+        {
+            _methodContext.Current.RemovableExpressions.Add(invocationExpression);
+            return invocationExpression;
+        }
+
         private SyntaxNode CompleteVerifyAllStatements(MethodDeclarationSyntax node)
         {
             var statements = node.Body.Statements;
+            foreach (var removable in _methodContext.Current.RemovableExpressions)
+            {
+                var removableText = removable.ToString();
+                var expressionStatementToRemove = statements.OfType<ExpressionStatementSyntax>().FirstOrDefault(x => x.Expression is InvocationExpressionSyntax && x.Expression.ToString() == removableText);
+                statements = statements.Remove(expressionStatementToRemove);
+            }
+
             foreach (var receivedCall in _methodContext.Current.TakeRest())
                 statements = statements.Add(SyntaxFactory.ExpressionStatement(receivedCall));
             node = node.WithBody(node.Body.WithStatements(statements));

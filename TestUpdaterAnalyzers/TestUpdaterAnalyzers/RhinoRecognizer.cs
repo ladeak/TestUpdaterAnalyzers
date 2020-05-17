@@ -46,6 +46,9 @@ namespace TestUpdaterAnalyzers
         public static bool IsOutRefProperty(IMethodSymbol memberSymbol) =>
             IsSymbol(memberSymbol, "OutRef", "IMethodOptions");
 
+        public static bool IsPropertyBehavior(IMethodSymbol memberSymbol) =>
+            IsSymbol(memberSymbol, "PropertyBehavior", "IMethodOptions");
+
         public static bool IsVerifyAllExpectationsMethod(IMethodSymbol memberSymbol) =>
             IsSymbol(memberSymbol, "VerifyAllExpectations", "RhinoMocksExtensions");
 

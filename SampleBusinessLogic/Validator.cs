@@ -4,12 +4,14 @@ namespace SampleBusinessLogic
 {
     public class Validator : IValidator
     {
+        public bool IsEmptyNameValid { get; set; }
+
         public bool TryValidate(Request request, out bool result)
         {
             if (request == null)
                 result = false;
             else
-                result = !string.IsNullOrWhiteSpace(request.Name)
+                result = (IsEmptyNameValid ? request.Name != null : !string.IsNullOrWhiteSpace(request.Name))
                                && request.Age > 0
                                && request.Age < 120
                                && request.Height > 0
@@ -22,7 +24,7 @@ namespace SampleBusinessLogic
         {
             if (request == null)
                 throw new ArgumentException(nameof(request));
-            return !string.IsNullOrWhiteSpace(request.Name)
+            return (IsEmptyNameValid ? request.Name != null : !string.IsNullOrWhiteSpace(request.Name))
                 && request.Age > 0
                 && request.Age < 120
                 && request.Height > 0

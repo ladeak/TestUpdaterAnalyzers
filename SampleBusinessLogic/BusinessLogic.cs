@@ -24,5 +24,10 @@ namespace SampleBusinessLogic
                 throw new ArgumentException(nameof(request));
             return (int)(request.Name.Length * request.Age + request.Height);
         }
+
+        public bool IsEmptyNameAllowed()
+        {
+            return _validator.IsEmptyNameValid;
+        }
     }
 }
