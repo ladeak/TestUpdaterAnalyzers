@@ -161,10 +161,6 @@ namespace RhinoXUnitFixture
             Assert.Equal(5, result);
         }
 
-        // Do
-        // WhenCalled
-
-
         [Fact]
         public void WhenValid_IdCalculated()
         {
