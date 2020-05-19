@@ -128,8 +128,7 @@ namespace TestUpdaterAnalyzers
 
         public override SyntaxNode VisitArgument(ArgumentSyntax node)
         {
-            var argumentExpr = node.Expression as MemberAccessExpressionSyntax;
-            if (argumentExpr != null)
+            if (node.Expression is MemberAccessExpressionSyntax argumentExpr)
             {
                 var argumentSymbol = _originalSemantics.GetSymbolInfo(argumentExpr).Symbol;
                 if (argumentSymbol is IPropertySymbol propertySymbol)
@@ -155,7 +154,7 @@ namespace TestUpdaterAnalyzers
                         var innerSymbol = _originalSemantics.GetSymbolInfo(argumentExpr.Expression).Symbol as IPropertySymbol;
                         if (RhinoRecognizer.IsIsArgProperty(innerSymbol))
                         {
-                            return UseArgWith(node, GetEqualsNotNullArgument(_methodContext.Current.LambdaToken));
+                            return UseArgWith(node, GetNotEqualsNullArgument(_methodContext.Current.LambdaToken));
                         }
                     }
                 }
@@ -173,10 +172,32 @@ namespace TestUpdaterAnalyzers
                     }
                 }
             }
+
+            if (node.Expression is InvocationExpressionSyntax argumentMethodInvocation)
+            {
+                var argumentSymbol = _originalSemantics.GetSymbolInfo(argumentMethodInvocation.Expression).Symbol;
+                if (argumentSymbol is IMethodSymbol methodSymbol)
+                {
+                    if (RhinoRecognizer.IsEqualArgMethod(methodSymbol))
+                    {
+                        var equalsTo = argumentMethodInvocation.ArgumentList.Arguments.First().Expression as IdentifierNameSyntax;
+                        return UseArgWith(node, GetEqualsToGivenArgument(_methodContext.Current.LambdaToken, equalsTo));
+                    }
+                    if (RhinoRecognizer.IsSameArgMethod(methodSymbol))
+                    {
+                        var sameTo = argumentMethodInvocation.ArgumentList.Arguments.First().Expression as IdentifierNameSyntax;
+                        return UseArgWith(node, GetReferenceEqualsToGivenArgument(_methodContext.Current.LambdaToken, sameTo));
+                    }
+                    if (RhinoRecognizer.IsMatchesArgMethod(methodSymbol))
+                    {
+                        var lambdaArgument = argumentMethodInvocation.ArgumentList.Arguments.First().Expression as SimpleLambdaExpressionSyntax;
+                        return UseArgWith(node, GetLambdaAsArgument(_methodContext.Current.LambdaToken, lambdaArgument));
+                    }
+                }
+            }
+
             return base.VisitArgument(node);
         }
-
-
 
         private SyntaxNode ExtractExpectAndStubInvocation(MemberAccessExpressionSyntax parentNode)
         {
@@ -390,43 +411,74 @@ namespace TestUpdaterAnalyzers
 
         public SyntaxNode UseArgWith(ArgumentSyntax argument, ArgumentListSyntax lambdaArgument)
         {
-            if (argument.Expression is MemberAccessExpressionSyntax finalMemberAccess)
+            ExpressionSyntax beginExpression = null;
+            var finalExpression = argument.Expression;
+
+            if (finalExpression is InvocationExpressionSyntax invocationExpr) // It is Equal() or Same method() call
+                finalExpression = invocationExpr.Expression;
+
+            if (finalExpression is MemberAccessExpressionSyntax finalMemberAccess)
             {
-                var beginExpression = finalMemberAccess.Expression switch
+                beginExpression = finalMemberAccess.Expression switch
                 {
                     MemberAccessExpressionSyntax memberAccess => memberAccess.Expression,
-                    InvocationExpressionSyntax invocationExpression => (invocationExpression.Expression as MemberAccessExpressionSyntax)?.Expression,
-                    _ => null
+                    InvocationExpressionSyntax invocationExpression => (invocationExpression.Expression as MemberAccessExpressionSyntax)?.Expression, // out Dummy argument
+                    _ => finalMemberAccess.Expression // Arg.Matches
                 };
-
-                if (beginExpression is GenericNameSyntax argGenericArgument)
-                {
-                    var typeArguments = argGenericArgument.TypeArgumentList;
-                    var newArg = SyntaxFactory.Argument(
-                        SyntaxFactory.InvocationExpression(
-                        SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
-                            SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, SyntaxFactory.IdentifierName("NSubstitute"),
-                        SyntaxFactory.IdentifierName("Arg")),
-                        SyntaxFactory.GenericName(SyntaxFactory.Identifier("Is"), typeArguments)), lambdaArgument));
-                    return newArg;
-                }
             }
+
+            if (beginExpression is GenericNameSyntax argGenericArgument)
+            {
+                var typeArguments = argGenericArgument.TypeArgumentList;
+                var newArg = SyntaxFactory.Argument(
+                    SyntaxFactory.InvocationExpression(
+                    SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
+                        SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, SyntaxFactory.IdentifierName("NSubstitute"),
+                    SyntaxFactory.IdentifierName("Arg")),
+                    SyntaxFactory.GenericName(SyntaxFactory.Identifier("Is"), typeArguments)), lambdaArgument));
+                return newArg;
+            }
+
             return argument;
         }
 
-        private static ArgumentListSyntax GetEqualsNullArgument(SyntaxToken token)
+        private ArgumentListSyntax GetEqualsNullArgument(SyntaxToken token)
         {
             return SyntaxFactory.ArgumentList(SyntaxFactory.SingletonSeparatedList(
                 SyntaxFactory.Argument(SyntaxFactory.SimpleLambdaExpression(SyntaxFactory.Parameter(token),
                 SyntaxFactory.BinaryExpression(SyntaxKind.EqualsExpression, SyntaxFactory.IdentifierName(token), SyntaxFactory.LiteralExpression(SyntaxKind.NullLiteralExpression))))));
         }
 
-        private static ArgumentListSyntax GetEqualsNotNullArgument(SyntaxToken token)
+        private ArgumentListSyntax GetNotEqualsNullArgument(SyntaxToken token)
         {
             return SyntaxFactory.ArgumentList(SyntaxFactory.SingletonSeparatedList(
                 SyntaxFactory.Argument(
                     SyntaxFactory.SimpleLambdaExpression(SyntaxFactory.Parameter(token),
                     SyntaxFactory.BinaryExpression(SyntaxKind.NotEqualsExpression, SyntaxFactory.IdentifierName(token), SyntaxFactory.LiteralExpression(SyntaxKind.NullLiteralExpression))))));
+        }
+
+        private ArgumentListSyntax GetEqualsToGivenArgument(SyntaxToken token, IdentifierNameSyntax equalsTo)
+        {
+            return SyntaxFactory.ArgumentList(SyntaxFactory.SingletonSeparatedList(
+                SyntaxFactory.Argument(
+                    SyntaxFactory.SimpleLambdaExpression(SyntaxFactory.Parameter(token),
+                    SyntaxFactory.BinaryExpression(SyntaxKind.EqualsExpression, SyntaxFactory.IdentifierName(token), equalsTo)))));
+        }
+
+        private ArgumentListSyntax GetReferenceEqualsToGivenArgument(SyntaxToken token, IdentifierNameSyntax sameAs)
+        {
+            return SyntaxFactory.ArgumentList(SyntaxFactory.SingletonSeparatedList(
+                SyntaxFactory.Argument(
+                    SyntaxFactory.SimpleLambdaExpression(SyntaxFactory.Parameter(token),
+                    SyntaxFactory.InvocationExpression(SyntaxFactory.IdentifierName("ReferenceEquals"),
+                    SyntaxFactory.ArgumentList(SyntaxFactory.SeparatedList(new[] { SyntaxFactory.Argument(SyntaxFactory.IdentifierName(token)), SyntaxFactory.Argument(sameAs) }))
+            )))));
+        }
+
+        private ArgumentListSyntax GetLambdaAsArgument(SyntaxToken token, SimpleLambdaExpressionSyntax lambdaArgument)
+        {
+            return SyntaxFactory.ArgumentList(SyntaxFactory.SingletonSeparatedList(
+                SyntaxFactory.Argument(lambdaArgument)));
         }
     }
 }

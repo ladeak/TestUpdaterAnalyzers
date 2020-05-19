@@ -254,7 +254,7 @@ namespace RhinoXUnitFixture
         public void WhenValid_IdCalculated()
         {
             var mock = Substitute.For<IValidator>();
-            mock.Validate(NSubstitute.Arg.Is<Request>(a0 => a0.Name == ""test"")).Returns(true);
+            mock.Validate(NSubstitute.Arg.Is<Request>(y => y.Name == ""test"")).Returns(true);
             var sut = new BusinessLogic(mock);
             var result = sut.CalculateId(new Request() { Age = 1, Height = 1, Name = ""test"" });
             Assert.Equal(5, result);
