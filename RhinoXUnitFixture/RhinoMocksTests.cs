@@ -1,4 +1,3 @@
-using NSubstitute;
 using Rhino.Mocks;
 using SampleBusinessLogic;
 using System;

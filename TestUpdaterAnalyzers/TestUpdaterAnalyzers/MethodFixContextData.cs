@@ -12,7 +12,8 @@ namespace TestUpdaterAnalyzers
 
         public void Add(string identifier, ExpressionSyntax syntax)
         {
-            MockedExpectCalls.TryAdd(identifier, new Queue<ExpressionSyntax>());
+            if (!MockedExpectCalls.ContainsKey(identifier))
+                MockedExpectCalls.Add(identifier, new Queue<ExpressionSyntax>());
             if (MockedExpectCalls.TryGetValue(identifier, out var list))
             {
                 list.Enqueue(syntax);
