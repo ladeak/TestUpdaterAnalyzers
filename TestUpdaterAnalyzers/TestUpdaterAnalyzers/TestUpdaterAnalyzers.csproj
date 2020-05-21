@@ -8,18 +8,13 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <PackageId>TestUpdaterAnalyzers</PackageId>
-    <PackageVersion>0.0.8</PackageVersion>
-    <Authors>ladea</Authors>
-    <PackageLicenseUrl>http://LICENSE_URL_HERE_OR_DELETE_THIS_LINE</PackageLicenseUrl>
-    <PackageProjectUrl>http://PROJECT_URL_HERE_OR_DELETE_THIS_LINE</PackageProjectUrl>
-    <PackageIconUrl>http://ICON_URL_HERE_OR_DELETE_THIS_LINE</PackageIconUrl>
-    <RepositoryUrl>http://REPOSITORY_URL_HERE_OR_DELETE_THIS_LINE</RepositoryUrl>
+    <PackageId>Ladeak.TestMockUpdater</PackageId>
+    <PackageVersion>0.1.0-prerelease</PackageVersion>
+    <Authors>ladeak</Authors>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-    <Description>TestUpdaterAnalyzers</Description>
-    <PackageReleaseNotes>Summary of changes made in this release of the package.</PackageReleaseNotes>
-    <Copyright>Copyright</Copyright>
-    <PackageTags>TestUpdaterAnalyzers, analyzers</PackageTags>
+    <Description>This package offers analyzers to update RhinoMocks to NSubstitute</Description>
+    <Copyright>ladeak</Copyright>
+    <PackageTags>RhinoMocks, NSubstitute, analyzers</PackageTags>
     <NoPackageAnalysis>true</NoPackageAnalysis>
   </PropertyGroup>
 
