@@ -129,9 +129,14 @@ namespace TestHelper
 
             newSource = newSource.Replace("\r\n", Environment.NewLine);
 
-            result = string.Compare(newSource, actual);
 
-            Console.WriteLine(result);
+            for (int i = 0; i < newSource.Length; i++)
+            {
+                if (newSource[i] != actual[i])
+                    Console.WriteLine($"{i}, news: {(byte)newSource[i]}, actial: {(byte)actual[i]}, char: {newSource[i]}");
+            }
+
+
 
             Assert.AreEqual(newSource, actual);
         }
