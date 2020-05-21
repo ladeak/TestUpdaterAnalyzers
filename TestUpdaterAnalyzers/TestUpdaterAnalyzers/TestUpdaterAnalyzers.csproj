@@ -15,6 +15,8 @@
     <Copyright>ladeak</Copyright>
     <PackageTags>RhinoMocks, NSubstitute, analyzers</PackageTags>
     <NoPackageAnalysis>true</NoPackageAnalysis>
+    <RepositoryUrl>https://github.com/ladeak/TestUpdaterAnalyzers</RepositoryUrl>
+    <PackageLicenseUrl>https://github.com/ladeak/TestUpdaterAnalyzers/blob/master/LICENSE</PackageLicenseUrl>
   </PropertyGroup>
 
   <ItemGroup>
