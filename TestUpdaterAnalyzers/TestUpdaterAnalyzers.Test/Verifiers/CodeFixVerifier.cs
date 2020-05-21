@@ -123,9 +123,16 @@ namespace TestHelper
 
             //after applying all of the code fixes, compare the resulting string to the inputted one
             var actual = GetStringFromDocument(document);
-            newSource = newSource.Replace("\r\n", "\n");
 
             var result = string.Compare(newSource, actual);
+            Console.WriteLine(result);
+
+            newSource = newSource.Replace("\r\n", Environment.NewLine);
+            newSource = newSource.Replace("\n", Environment.NewLine);
+
+            result = string.Compare(newSource, actual);
+            Console.WriteLine(result);
+
             Assert.AreEqual(newSource, actual);
         }
     }
