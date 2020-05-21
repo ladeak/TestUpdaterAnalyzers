@@ -126,20 +126,6 @@ namespace TestHelper
 
             actual = actual.Replace("\r\n", Environment.NewLine);
             newSource = newSource.Replace("\r\n", Environment.NewLine);
-            foreach (var c in Environment.NewLine)
-                Console.WriteLine($"nl {(byte)c}");
-
-            for (int i = 0; i < newSource.Length; i++)
-            {
-                if (newSource[i] != actual[i])
-                {
-                    Console.WriteLine($"{i}, news: {(byte)newSource[i]}, actual: {(byte)actual[i]}, char: {newSource[i]}");
-                    i++;
-                    Console.WriteLine($"{i}, news: {(byte)newSource[i]}, actual: {(byte)actual[i]}, char: {newSource[i]}");
-                    break;
-                }
-            }
-
             Assert.AreEqual(newSource, actual);
         }
     }
