@@ -1,4 +1,4 @@
-name: 0.1.$(Rev:.r)-prerelease
+name: 0.1$(Rev:.r)-prerelease
 
 pool:
   vmImage: 'ubuntu-latest'
