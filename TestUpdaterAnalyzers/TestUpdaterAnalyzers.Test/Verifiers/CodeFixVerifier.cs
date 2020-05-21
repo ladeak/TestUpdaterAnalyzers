@@ -4,6 +4,7 @@ using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -109,7 +110,7 @@ namespace TestHelper
 
                     Assert.IsTrue(false,
                         string.Format("Fix introduced new compiler diagnostics:\r\n{0}\r\n\r\nNew document:\r\n{1}\r\n",
-                            string.Join("\r\n", newCompilerDiagnostics.Where(x=>x.Severity != DiagnosticSeverity.Hidden).Select(d => d.ToString())),
+                            string.Join("\r\n", newCompilerDiagnostics.Where(x => x.Severity != DiagnosticSeverity.Hidden).Select(d => d.ToString())),
                             document.GetSyntaxRootAsync().Result.ToFullString()));
                 }
 
@@ -122,6 +123,7 @@ namespace TestHelper
 
             //after applying all of the code fixes, compare the resulting string to the inputted one
             var actual = GetStringFromDocument(document);
+            newSource = newSource.Replace("\r\n", Environment.NewLine);
             Assert.AreEqual(newSource, actual);
         }
     }
