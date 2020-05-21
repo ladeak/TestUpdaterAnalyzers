@@ -124,8 +124,8 @@ namespace TestHelper
             //after applying all of the code fixes, compare the resulting string to the inputted one
             var actual = GetStringFromDocument(document);
 
-            actual = actual.Replace("\n", "\r\n");
-
+            actual = actual.Replace("\r\n", Environment.NewLine);
+            newSource = newSource.Replace("\r\n", Environment.NewLine);
             foreach (var c in Environment.NewLine)
                 Console.WriteLine($"nl {(byte)c}");
 
