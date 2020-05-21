@@ -26,10 +26,11 @@ steps:
     nobuild: true
     includesymbols: true
     versioningScheme: 'byBuildNumber'
+  displayName: dotnet pack
 - task: NuGetCommand@2
   inputs:
     command: 'push'
     packagesToPush: '$(Build.ArtifactStagingDirectory)/**/*.nupkg;!$(Build.ArtifactStagingDirectory)/**/*.symbols.nupkg'
     nuGetFeedType: 'external'
     publishFeedCredentials: 'ladeak.testupdateranalyzer'
-  enabled: false
+  displayName: nuget push
