@@ -128,9 +128,9 @@ namespace TestHelper
             Console.WriteLine(result);
 
             newSource = newSource.Replace("\r\n", Environment.NewLine);
-            newSource = newSource.Replace("\n", Environment.NewLine);
 
             result = string.Compare(newSource, actual);
+
             Console.WriteLine(result);
 
             Assert.AreEqual(newSource, actual);
