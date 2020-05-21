@@ -123,18 +123,7 @@ namespace TestHelper
 
             //after applying all of the code fixes, compare the resulting string to the inputted one
             var actual = GetStringFromDocument(document);
-
-            var result = string.Compare(newSource, actual);
-            Console.WriteLine(result);
- 
-            for (int i = 0; i < newSource.Length; i++)
-            {
-                if (newSource[i] != actual[i])
-                    Console.WriteLine($"{i}, news: {(byte)newSource[i]}, actial: {(byte)actual[i]}, char: {newSource[i]}");
-            }
-
-
-
+            newSource = newSource.Replace(Environment.NewLine, "\r\n");
             Assert.AreEqual(newSource, actual);
         }
     }
