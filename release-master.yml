@@ -22,7 +22,7 @@ steps:
 - task: DotNetCoreCLI@2
   inputs:
     command: 'pack'
-    packagesToPack: '**/*.csproj'
+    packagesToPack: '**/TestUpdaterAnalyzers.csproj'
     nobuild: true
     includesymbols: true
     versioningScheme: 'byBuildNumber'
