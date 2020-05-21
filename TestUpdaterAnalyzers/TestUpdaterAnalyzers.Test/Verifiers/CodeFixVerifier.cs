@@ -126,10 +126,7 @@ namespace TestHelper
 
             var result = string.Compare(newSource, actual);
             Console.WriteLine(result);
-
-            newSource = newSource.Replace("\r\n", Environment.NewLine);
-
-
+ 
             for (int i = 0; i < newSource.Length; i++)
             {
                 if (newSource[i] != actual[i])
