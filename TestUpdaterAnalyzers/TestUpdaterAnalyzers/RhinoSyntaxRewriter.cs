@@ -289,7 +289,7 @@ namespace TestUpdaterAnalyzers
                 || !_invocationContext.Current.OriginalArguments.Any())
                 return invocation.ArgumentList;
 
-            var paramToken = SyntaxFactory.ParseToken("c");
+            var paramToken = _methodContext.Current.LambdaToken;
 
             int currentOutArgumentIndex = 0;
             List<StatementSyntax> statements = new List<StatementSyntax>();

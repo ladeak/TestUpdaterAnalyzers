@@ -101,7 +101,7 @@ namespace RhinoXUnitFixture
         {
             var mock = Substitute.For<IValidator>();
             mock.Validate(NSubstitute.Arg.Any<Request>()).Returns(true);
-            mock.TryValidate(NSubstitute.Arg.Any<Request>(), out NSubstitute.Arg.Any<bool>()).Returns(c => { c[1] = true; return true; });
+            mock.TryValidate(NSubstitute.Arg.Any<Request>(), out NSubstitute.Arg.Any<bool>()).Returns(a0 => { a0[1] = true; return true; });
             var sut = new BusinessLogic(mock);
             sut.CalculateId(new Request() { Age = 1, Height = 1, Name = ""test"" });
             mock.Received().Validate(NSubstitute.Arg.Any<Request>());
