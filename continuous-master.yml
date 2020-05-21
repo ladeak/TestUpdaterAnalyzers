@@ -13,13 +13,15 @@ steps:
 - task: DotNetCoreCLI@2
   inputs:
     command: 'build'
-    projects: '**/*.csproj'
+    projects: |
+      **/TestUpdaterAnalyzers.csproj
+      **/TestUpdaterAnalyzers.Tests.csproj
     arguments: '-c Debug'
   displayName: dotnet build
 
 - task: DotNetCoreCLI@2
   inputs:
     command: 'test'
-    packagesToPack: '**/*.csproj'
+    projects: '**/*.Tests.csproj'
   displayName: dotnet test
 
