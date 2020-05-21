@@ -1,0 +1,37 @@
+trigger:
+- master
+
+name: 0.1.$(Rev:.r)-prerelease
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'build'
+    projects: |
+      **/TestUpdaterAnalyzers.csproj
+      **/TestUpdaterAnalyzers.Tests.csproj
+    arguments: '-c $(BuildConfiguration)'
+  displayName: dotnet build
+
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'test'
+    projects: '**/*.Test.csproj'
+  displayName: dotnet test
+
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'pack'
+    packagesToPack: '**/*.csproj'
+    nobuild: true
+    includesymbols: true
+    versioningScheme: 'byBuildNumber'
+- task: NuGetCommand@2
+  inputs:
+    command: 'push'
+    packagesToPush: '$(Build.ArtifactStagingDirectory)/**/*.nupkg;!$(Build.ArtifactStagingDirectory)/**/*.symbols.nupkg'
+    nuGetFeedType: 'external'
+    publishFeedCredentials: 'ladeak.testupdateranalyzer'
