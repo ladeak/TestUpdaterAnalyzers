@@ -22,6 +22,6 @@ steps:
 - task: DotNetCoreCLI@2
   inputs:
     command: 'test'
-    projects: '**/*.Tests.csproj'
+    projects: '**/TestUpdaterAnalyzers.Tests.csproj'
   displayName: dotnet test
 
