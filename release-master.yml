@@ -1,4 +1,4 @@
-name: 0.1.$(Rev:.r)-prerelease
+name: 0.1$(Rev:.r)-prerelease
 
 pool:
   vmImage: 'ubuntu-latest'
@@ -22,13 +22,15 @@ steps:
 - task: DotNetCoreCLI@2
   inputs:
     command: 'pack'
-    packagesToPack: '**/*.csproj'
+    packagesToPack: '**/TestUpdaterAnalyzers.csproj'
     nobuild: true
     includesymbols: true
     versioningScheme: 'byBuildNumber'
+  displayName: dotnet pack
 - task: NuGetCommand@2
   inputs:
     command: 'push'
     packagesToPush: '$(Build.ArtifactStagingDirectory)/**/*.nupkg;!$(Build.ArtifactStagingDirectory)/**/*.symbols.nupkg'
     nuGetFeedType: 'external'
     publishFeedCredentials: 'ladeak.testupdateranalyzer'
+  displayName: nuget push

@@ -7,7 +7,7 @@ A C# analyzer to update Rhino Mocks to NSubstitute
 Add a package reference to the Test project using Rhino Mocks.
 
 ```xml
-<PackageReference Include="LaDeak.TestMockUpdater" Version="0.1.11" />
+<PackageReference Include="LaDeak.TestMockUpdater" Version="*" />
 ```
 
 Use the C# analyzer to fix and update Rhino Mocks tests
