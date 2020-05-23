@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\SampleBusinessLogic\SampleBusinessLogic.csproj" />
+    <ProjectReference Include="..\..\sample\SampleBusinessLogic\SampleBusinessLogic.csproj" />
     <ProjectReference Include="..\TestUpdaterAnalyzers\TestUpdaterAnalyzers.csproj" />
   </ItemGroup>
 
