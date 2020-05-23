@@ -1,6 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -39,8 +40,8 @@ namespace TestUpdaterAnalyzers
         private void FindEmptySyntaxToken(MethodDeclarationSyntax node)
         {
             int i = 0;
-            while (node.DescendantTokens().Any(x => x.IsKind(SyntaxKind.IdentifierToken) && x.ValueText == _methodContext.Current.LambdaToken.ValueText))
-                _methodContext.Current.LambdaToken = SyntaxFactory.Identifier($"a{++i}");
+            while (node.DescendantTokens().Any(x => x.IsKind(SyntaxKind.IdentifierToken) && x.ValueText == _methodContext.Current.UnusedLambdaToken.ValueText))
+                _methodContext.Current.UnusedLambdaToken = SyntaxFactory.Identifier($"a{++i}");
         }
 
         public override SyntaxNode VisitInvocationExpression(InvocationExpressionSyntax invocationExpr)
@@ -60,7 +61,7 @@ namespace TestUpdaterAnalyzers
                     {
                         if (RhinoRecognizer.IsReturnMethod(originalMemberSymbol))
                         {
-                            invocationExpr = invocationExpr.WithArgumentList(ReWriteOutRefArguments(invocationExpr));
+                            invocationExpr = invocationExpr.WithArgumentList(ReWriteArguments(invocationExpr));
                             if (_invocationContext.Current.UseAnyArgs)
                                 return invocationExpr.WithExpression(UseReturnsForAnyArgs(memberAccessExpr));
                             else
@@ -120,6 +121,13 @@ namespace TestUpdaterAnalyzers
                         {
                             return RemoveInvocation(invocationExpr);
                         }
+                        if (RhinoRecognizer.IsWhenCalledMethod(originalMemberSymbol)
+                            && invocationExpr.Expression is MemberAccessExpressionSyntax whenCalledMemberAccess
+                            && invocationExpr.ArgumentList.Arguments.FirstOrDefault().Expression is SimpleLambdaExpressionSyntax whenCalledLambda)
+                        {
+                            _invocationContext.Current.WhenCalledLambda = whenCalledLambda;
+                            return whenCalledMemberAccess.Expression;
+                        }
                     }
                 }
                 return invocationExpr;
@@ -146,7 +154,7 @@ namespace TestUpdaterAnalyzers
                         var innerSymbol = _originalSemantics.GetSymbolInfo(argumentExpr.Expression).Symbol as IPropertySymbol;
                         if (RhinoRecognizer.IsIsArgProperty(innerSymbol))
                         {
-                            return UseArgWith(node, GetEqualsNullArgument(_methodContext.Current.LambdaToken));
+                            return UseArgWith(node, GetEqualsNullArgument(_methodContext.Current.UnusedLambdaToken));
                         }
                     }
                     if (RhinoRecognizer.IsNotNullArgProperty(propertySymbol))
@@ -154,7 +162,7 @@ namespace TestUpdaterAnalyzers
                         var innerSymbol = _originalSemantics.GetSymbolInfo(argumentExpr.Expression).Symbol as IPropertySymbol;
                         if (RhinoRecognizer.IsIsArgProperty(innerSymbol))
                         {
-                            return UseArgWith(node, GetNotEqualsNullArgument(_methodContext.Current.LambdaToken));
+                            return UseArgWith(node, GetNotEqualsNullArgument(_methodContext.Current.UnusedLambdaToken));
                         }
                     }
                 }
@@ -181,17 +189,17 @@ namespace TestUpdaterAnalyzers
                     if (RhinoRecognizer.IsEqualArgMethod(methodSymbol))
                     {
                         var equalsTo = argumentMethodInvocation.ArgumentList.Arguments.First().Expression as IdentifierNameSyntax;
-                        return UseArgWith(node, GetEqualsToGivenArgument(_methodContext.Current.LambdaToken, equalsTo));
+                        return UseArgWith(node, GetEqualsToGivenArgument(_methodContext.Current.UnusedLambdaToken, equalsTo));
                     }
                     if (RhinoRecognizer.IsSameArgMethod(methodSymbol))
                     {
                         var sameTo = argumentMethodInvocation.ArgumentList.Arguments.First().Expression as IdentifierNameSyntax;
-                        return UseArgWith(node, GetReferenceEqualsToGivenArgument(_methodContext.Current.LambdaToken, sameTo));
+                        return UseArgWith(node, GetReferenceEqualsToGivenArgument(_methodContext.Current.UnusedLambdaToken, sameTo));
                     }
                     if (RhinoRecognizer.IsMatchesArgMethod(methodSymbol))
                     {
                         var lambdaArgument = argumentMethodInvocation.ArgumentList.Arguments.First().Expression as SimpleLambdaExpressionSyntax;
-                        return UseArgWith(node, GetLambdaAsArgument(_methodContext.Current.LambdaToken, lambdaArgument));
+                        return UseArgWith(node, GetLambdaAsArgument(_methodContext.Current.UnusedLambdaToken, lambdaArgument));
                     }
                 }
             }
@@ -283,16 +291,33 @@ namespace TestUpdaterAnalyzers
             return memberAccess.WithName(SyntaxFactory.IdentifierName("ReturnsForAnyArgs"));
         }
 
-        private ArgumentListSyntax ReWriteOutRefArguments(InvocationExpressionSyntax invocation)
+        private ArgumentListSyntax ReWriteArguments(InvocationExpressionSyntax invocation)
         {
-            if (!_invocationContext.Current.OutRefArguments.Any()
+            if ((!_invocationContext.Current.OutRefArguments.Any()
                 || !_invocationContext.Current.OriginalArguments.Any())
+                && _invocationContext.Current.WhenCalledLambda is null)
                 return invocation.ArgumentList;
 
-            var paramToken = _methodContext.Current.LambdaToken;
+            var paramToken = _methodContext.Current.UnusedLambdaToken;
 
             int currentOutArgumentIndex = 0;
             List<StatementSyntax> statements = new List<StatementSyntax>();
+            ExpressionSyntax returnExpression = invocation.ArgumentList.Arguments.First().Expression;
+
+            // Exectute WhenCalledStatements
+            if (_invocationContext.Current.WhenCalledLambda?.Body is BlockSyntax lambdaBlock)
+            {
+                var methodInvocationRewriter = new MethodInvocationLambdaRewriter(_invocationContext.Current.WhenCalledLambda.Parameter, paramToken);
+                foreach (var statement in lambdaBlock.Statements)
+                {
+                    if (methodInvocationRewriter.Rewrite(statement, out var newSyntax) && newSyntax is StatementSyntax rewrittenStatement)
+                        statements.Add(rewrittenStatement);
+                }
+                if (methodInvocationRewriter.ReturnStatement != null)
+                    returnExpression = methodInvocationRewriter.ReturnStatement;
+            }
+
+            // Set Out Arguments on CallInfo
             foreach (var outArg in _invocationContext.Current.OutRefArguments)
             {
                 currentOutArgumentIndex = _invocationContext.Current.OriginalArguments.FindIndex(currentOutArgumentIndex, x => x.RefKindKeyword.IsKind(SyntaxKind.OutKeyword));
@@ -305,7 +330,9 @@ namespace TestUpdaterAnalyzers
                       outArg));
                 statements.Add(outParamAssignment);
             }
-            statements.Add(SyntaxFactory.ReturnStatement(invocation.ArgumentList.Arguments.First().Expression));
+
+            // Add return statement
+            statements.Add(SyntaxFactory.ReturnStatement(returnExpression));
 
             return SyntaxFactory.ArgumentList(SyntaxFactory.SingletonSeparatedList(
                 SyntaxFactory.Argument(

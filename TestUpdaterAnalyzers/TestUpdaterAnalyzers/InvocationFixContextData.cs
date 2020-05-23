@@ -10,5 +10,7 @@ namespace TestUpdaterAnalyzers
         public List<ExpressionSyntax> OutRefArguments { get; } = new List<ExpressionSyntax>();
 
         public List<ArgumentSyntax> OriginalArguments { get; } = new List<ArgumentSyntax>();
+
+        public SimpleLambdaExpressionSyntax WhenCalledLambda { get; set; }
     }
 }

@@ -42,6 +42,6 @@ namespace TestUpdaterAnalyzers
 
         public HashSet<InvocationExpressionSyntax> RemovableExpressions { get; } = new HashSet<InvocationExpressionSyntax>();
 
-        public SyntaxToken LambdaToken { get; set; } = SyntaxFactory.Identifier("a0");
+        public SyntaxToken UnusedLambdaToken { get; set; } = SyntaxFactory.Identifier("a0");
     }
 }

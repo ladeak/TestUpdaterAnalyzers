@@ -169,5 +169,20 @@ namespace RhinoXUnitFixture
             var result = sut.CalculateId(new Request() { Age = 1, Height = 1, Name = "test" });
             Assert.Equal(5, result);
         }
+
+        [Fact]
+        public void WhenCalled()
+        {
+            var mock = MockRepository.GenerateMock<IValidator>();
+            bool flag = false;
+            mock.Expect(x => x.Validate(Arg<Request>.Is.Anything)).WhenCalled(x =>
+            {
+                if (x.Arguments[0] != null)
+                    flag = true;
+            }).Return(true);
+            var sut = new BusinessLogic(mock);
+            var result = sut.CalculateId(new Request() { Age = 1, Height = 1, Name = "test" });
+            Assert.True(flag);
+        }
     }
 }

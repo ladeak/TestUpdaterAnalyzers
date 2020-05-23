@@ -133,7 +133,7 @@ namespace RhinoXUnitFixture
         {
             var mock = Substitute.For<IValidator>();
             var request = new Request() { Age = 1, Height = 1, Name = "test" };
-            mock.Validate(Arg.Is<Request>(x => ReferenceEquals(x,request))).Returns(true);
+            mock.Validate(Arg.Is<Request>(x => ReferenceEquals(x, request))).Returns(true);
             var sut = new BusinessLogic(mock);
             var result = sut.CalculateId(request);
             Assert.Equal(5, result);
@@ -147,6 +147,22 @@ namespace RhinoXUnitFixture
             var sut = new BusinessLogic(mock);
             var result = sut.CalculateId(new Request() { Age = 1, Height = 1, Name = "test" });
             Assert.Equal(5, result);
+        }
+
+        [Fact]
+        public void WhenCalled()
+        {
+            var mock = Substitute.For<IValidator>();
+            bool flag = false;
+            mock.Validate(Arg.Any<Request>()).Returns(x =>
+            {
+                if (x[0] != null)
+                    flag = true;
+                return true;
+            });
+            var sut = new BusinessLogic(mock);
+            var result = sut.CalculateId(new Request() { Age = 1, Height = 1, Name = "test" });
+            Assert.True(flag);
         }
     }
 }
