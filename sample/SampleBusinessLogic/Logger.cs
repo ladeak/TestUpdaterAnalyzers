@@ -6,11 +6,14 @@ namespace SampleBusinessLogic
     {
         private readonly string _prefix;
 
-        public Logger()
-        {
-            _prefix = typeof(T).Name;
-        }
+        public Logger() => _prefix = typeof(T).Name;
 
-        public void Log(string message) => Console.WriteLine($"{_prefix}: message");
+        public bool IsEnabled { get; set; }
+
+        public void Log(string message)
+        {
+            if (IsEnabled)
+                Console.WriteLine($"{_prefix}: message");
+        }
     }
 }

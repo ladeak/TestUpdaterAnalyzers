@@ -16,6 +16,7 @@ namespace SampleBusinessLogic
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             if (!_nameProvider.Initialized)
                 _nameProvider.Initialize();
+            _logger.IsEnabled = true;
         }
 
         public int CalculateId(Request request)

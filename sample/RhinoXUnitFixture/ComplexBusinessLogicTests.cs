@@ -1,11 +1,5 @@
 ﻿using Rhino.Mocks;
 using SampleBusinessLogic;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Text;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace RhinoXUnitFixture
@@ -31,9 +25,11 @@ namespace RhinoXUnitFixture
 
             var nameProviderMock = MockRepository.GenerateMock<INameProvider>();
             nameProviderMock.Expect(x => x.GetFullName("test")).IgnoreArguments().Return("eee").Repeat.Any();
-            nameProviderMock.Expect(x => x.Initialized).Return(true);
+            nameProviderMock.Stub(x => x.Initialized).Return(true);
 
             var loggerMock = MockRepository.GenerateMock<ILogger<ComplexBusinessLogic>>();
+            loggerMock.Stub(x => x.IsEnabled).PropertyBehavior();
+
             var sut = new ComplexBusinessLogic(validatorStub, nameProviderMock, loggerMock);
             
             // Act
@@ -43,6 +39,7 @@ namespace RhinoXUnitFixture
             Assert.Equal(3, result);
             nameProviderMock.VerifyAllExpectations();
             loggerMock.AssertWasCalled(x => x.Log(Arg<string>.Is.NotNull));
+            Assert.True(loggerMock.IsEnabled);
         }
 
     }
