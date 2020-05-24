@@ -4,7 +4,6 @@ using Microsoft.CodeAnalysis.CodeFixes;
 using System.Collections.Immutable;
 using System.Composition;
 using System.Linq;
-using System.Reflection.Metadata;
 using System.Threading.Tasks;
 
 namespace TestUpdaterAnalyzers
@@ -12,8 +11,8 @@ namespace TestUpdaterAnalyzers
     [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(TestUpdaterAnalyzersCodeFixProvider)), Shared]
     public class TestUpdaterAnalyzersCodeFixProvider : CodeFixProvider
     {
-        private const string ChangeToNSubstitute = "Change to NSubstitute";
-        private const string ChangeToNSubstituteInDoc = "Change to NSubstitute In Document";
+        private const string ChangeToNSubstitute = "Convert to NSubstitute";
+        private const string ChangeToNSubstituteInDoc = "Convert to NSubstitute In Document";
 
         public sealed override ImmutableArray<string> FixableDiagnosticIds
         {
