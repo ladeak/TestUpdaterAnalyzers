@@ -125,7 +125,7 @@ public void CalculateId_Returns_NumberEs_Multiplied_Age_Height()
 
 1. If it is small issue (spelling or a bug fix) feel free to start working on a fix.
 1. If you are submitting a feature or substantial code contribution open an issue for discussion.
-1. Add your code changes.
+1. Add your code changes, follow existing code conventions.
 1. Make sure all existing tests are still correct.
 1. Add new tests to cover the new use-case or bug fix.
 1. Submit a pull request with commit description detailing the new feature or the fixed bug. Link the related issue or discussion.
