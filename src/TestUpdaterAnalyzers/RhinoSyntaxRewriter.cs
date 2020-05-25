@@ -213,8 +213,8 @@ namespace TestUpdaterAnalyzers
             if (mockedObjectIdentifier == null)
                 return parentNode.Parent;
 
-            // If Expect call, generate a syntax for VerifyAllExpectations calls.
-            if (parentNode.Name.Identifier.ValueText == "Expect")
+            // If Expect call, generate a syntax for VerifyAllExpectations calls. Filter out property getters as MemberAccessExpression
+            if (parentNode.Name.Identifier.ValueText == "Expect" && !(lambdaBody is MemberAccessExpressionSyntax))
             {
                 (var assertInvocation, var assertKey) = PrepandCallToInvocation(mockedObjectIdentifier, "Received", lambdaBody);
                 _methodContext.Current.Add(assertKey, assertInvocation);
