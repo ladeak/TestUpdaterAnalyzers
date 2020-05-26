@@ -18,11 +18,12 @@
     <RepositoryUrl>https://github.com/ladeak/TestUpdaterAnalyzers</RepositoryUrl>
     <PackageLicenseUrl>https://github.com/ladeak/TestUpdaterAnalyzers/blob/master/LICENSE</PackageLicenseUrl>
     <PackageIcon>icon.png</PackageIcon>
+    <PackageVersion>0.0.30</PackageVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.0.0" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="3.6.0" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="2.6.2" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="2.10" PrivateAssets="all" />
     <PackageReference Update="NETStandard.Library" PrivateAssets="all" />
   </ItemGroup>
 
