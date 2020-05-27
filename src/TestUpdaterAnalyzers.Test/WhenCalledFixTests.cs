@@ -133,6 +133,108 @@ namespace RhinoXUnitFixture
             VerifyCSharpFix(test, expectedSource, allowNewCompilerDiagnostics: false);
         }
 
+        [TestMethod]
+        public void WhenCalledVoid()
+        {
+            var test = @"
+using Rhino.Mocks;
+using Xunit;
+using SampleBusinessLogic;
+
+namespace RhinoXUnitFixture
+{
+    public class RhinoMocksTests
+    {
+        [Fact]
+        public void WhenCalled()
+        {
+            var mock = MockRepository.GenerateMock<IValidator>();
+            bool flag = false;
+            mock.Stub(x => x.Run()).WhenCalled(x => flag = true);
+            new BusinessLogic(mock).Run();
+            Assert.True(flag);
+        }
+    }
+}
+";
+
+
+            var expectedSource = @"
+using NSubstitute;
+using Rhino.Mocks;
+using Xunit;
+using SampleBusinessLogic;
+
+namespace RhinoXUnitFixture
+{
+    public class RhinoMocksTests
+    {
+        [Fact]
+        public void WhenCalled()
+        {
+            var mock = Substitute.For<IValidator>();
+            bool flag = false;
+            mock.When(x => x.Run()).Do(x => flag = true);
+            new BusinessLogic(mock).Run();
+            Assert.True(flag);
+        }
+    }
+}
+";
+            VerifyCSharpFix(test, expectedSource, allowNewCompilerDiagnostics: false);
+        }
+
+        [TestMethod]
+        public void WhenCalledWithIgnoreArguments()
+        {
+            var test = @"
+using Rhino.Mocks;
+using Xunit;
+using SampleBusinessLogic;
+
+namespace RhinoXUnitFixture
+{
+    public class RhinoMocksTests
+    {
+        [Fact]
+        public void WhenCalled()
+        {
+            var mock = MockRepository.GenerateMock<IValidator>();
+            bool flag = false;
+            mock.Stub(x => x.Run()).WhenCalled(x => flag = true).IgnoreArguments();
+            new BusinessLogic(mock).Run();
+            Assert.True(flag);
+        }
+    }
+}
+";
+
+
+            var expectedSource = @"
+using NSubstitute;
+using Rhino.Mocks;
+using Xunit;
+using SampleBusinessLogic;
+
+namespace RhinoXUnitFixture
+{
+    public class RhinoMocksTests
+    {
+        [Fact]
+        public void WhenCalled()
+        {
+            var mock = Substitute.For<IValidator>();
+            bool flag = false;
+            mock.WhenForAnyArgs(x => x.Run()).Do(x => flag = true);
+            new BusinessLogic(mock).Run();
+            Assert.True(flag);
+        }
+    }
+}
+";
+            VerifyCSharpFix(test, expectedSource, allowNewCompilerDiagnostics: false);
+        }
+
         protected override CodeFixProvider GetCSharpCodeFixProvider()
         {
             return new TestUpdaterAnalyzersCodeFixProvider();

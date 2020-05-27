@@ -12,5 +12,15 @@ namespace TestUpdaterAnalyzers
         public List<ArgumentSyntax> OriginalArguments { get; } = new List<ArgumentSyntax>();
 
         public SimpleLambdaExpressionSyntax WhenCalledLambda { get; set; }
+
+        public bool HasReturn { get; set; }
+
+        public bool HasThrow { get; set; }
+
+        public KeyValuePair<string, ExpressionSyntax> ExpectCallForAssertion { get; set; }
+
+        public InvocationExpressionSyntax IsRemovable { get; set; }
+
+        public bool UseExceptionExtensions { get; set; }
     }
 }

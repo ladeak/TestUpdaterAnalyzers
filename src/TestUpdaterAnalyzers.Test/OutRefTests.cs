@@ -9,7 +9,7 @@ namespace TestUpdaterAnalyzers.Test
     public class OutRefTests : CodeFixVerifier
     {
         [TestMethod]
-        public void OutRefReplacesWithReturn()
+        public void OutRefReplacesBeforeReturn()
         {
             var test = @"
 using Rhino.Mocks;
@@ -25,6 +25,57 @@ namespace RhinoXUnitFixture
         {
             var mock = MockRepository.GenerateMock<IValidator>();
             mock.Expect(x => x.TryValidate(new Request(), out var dummy)).OutRef(true).Return(true);
+            var sut = new BusinessLogic(mock);
+            var result = sut.TryCalculateId(new Request() { Age = 1, Height = 1, Name = ""test"" });
+            Assert.Equal(5, result);
+        }
+    }
+}
+";
+
+
+            var expectedSource = @"
+using NSubstitute;
+using Rhino.Mocks;
+using Xunit;
+using SampleBusinessLogic;
+
+namespace RhinoXUnitFixture
+{
+    public class RhinoMocksTests
+    {
+        [Fact]
+        public void WhenValid_IdCalculated()
+        {
+            var mock = Substitute.For<IValidator>();
+            mock.TryValidate(new Request(), out var dummy).Returns(a0 => { a0[1] = true; return true; });
+            var sut = new BusinessLogic(mock);
+            var result = sut.TryCalculateId(new Request() { Age = 1, Height = 1, Name = ""test"" });
+            Assert.Equal(5, result);
+        }
+    }
+}
+";
+            VerifyCSharpFix(test, expectedSource, allowNewCompilerDiagnostics: false);
+        }
+
+        [TestMethod]
+        public void OutRefReplacesAfterReturn()
+        {
+            var test = @"
+using Rhino.Mocks;
+using Xunit;
+using SampleBusinessLogic;
+
+namespace RhinoXUnitFixture
+{
+    public class RhinoMocksTests
+    {
+        [Fact]
+        public void WhenValid_IdCalculated()
+        {
+            var mock = MockRepository.GenerateMock<IValidator>();
+            mock.Expect(x => x.TryValidate(new Request(), out var dummy)).Return(true).OutRef(true);
             var sut = new BusinessLogic(mock);
             var result = sut.TryCalculateId(new Request() { Age = 1, Height = 1, Name = ""test"" });
             Assert.Equal(5, result);
@@ -109,6 +160,7 @@ namespace RhinoXUnitFixture
 ";
             VerifyCSharpFix(test, expectedSource, allowNewCompilerDiagnostics: false);
         }
+
 
         protected override CodeFixProvider GetCSharpCodeFixProvider()
         {

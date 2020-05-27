@@ -9,13 +9,15 @@ namespace TestUpdaterAnalyzers
 {
     public class RhinoSyntaxRewriter : CSharpSyntaxRewriter
     {
-        private SemanticModel _originalSemantics;
-        private SyntaxWalkContext<InvocationFixContextData> _invocationContext = new SyntaxWalkContext<InvocationFixContextData>();
-        private SyntaxWalkContext<MethodFixContextData> _methodContext = new SyntaxWalkContext<MethodFixContextData>();
+        private readonly SemanticModel _originalSemantics;
+        private readonly SyntaxWalkContext<InvocationFixContextData, InvocationExpressionSyntax> _invocationContext;
+        private readonly SyntaxWalkContext<MethodFixContextData> _methodContext;
 
         public RhinoSyntaxRewriter(SemanticModel semanticModel)
         {
             _originalSemantics = semanticModel;
+            _invocationContext = new SyntaxWalkContext<InvocationFixContextData, InvocationExpressionSyntax>(InitializeInvocationState);
+            _methodContext = new SyntaxWalkContext<MethodFixContextData>();
         }
 
         public SyntaxNode Rewrite(SyntaxNode node)
@@ -44,9 +46,15 @@ namespace TestUpdaterAnalyzers
                 _methodContext.Current.UnusedLambdaToken = SyntaxFactory.Identifier($"a{++i}");
         }
 
+        private InvocationFixContextData InitializeInvocationState(InvocationExpressionSyntax invocationExpr)
+        {
+            var builder = new RhinoSyntaxInvocationStateBuilder(_originalSemantics);
+            return builder.Build(invocationExpr);
+        }
+
         public override SyntaxNode VisitInvocationExpression(InvocationExpressionSyntax invocationExpr)
         {
-            using (_invocationContext.Enter())
+            using (_invocationContext.Enter(invocationExpr))
             {
                 var memberAccessExpr = invocationExpr.Expression as MemberAccessExpressionSyntax;
                 if (memberAccessExpr != null)
@@ -88,7 +96,6 @@ namespace TestUpdaterAnalyzers
                             && invocationExpr.Expression is MemberAccessExpressionSyntax ignoreArgumentsMemberExpression
                             && ignoreArgumentsMemberExpression.Expression is InvocationExpressionSyntax innerIgnoreArgumentsInvocationExpression)
                         {
-                            _invocationContext.Current.UseAnyArgs = true;
                             return innerIgnoreArgumentsInvocationExpression;
                         }
                         if (RhinoRecognizer.IsAnyRepeatOptionsMethod(originalMemberSymbol)
@@ -102,7 +109,6 @@ namespace TestUpdaterAnalyzers
                             && invocationExpr.Expression is MemberAccessExpressionSyntax outRefMemberExpression
                             && outRefMemberExpression.Expression is InvocationExpressionSyntax outRefInnerInvocationExpression)
                         {
-                            _invocationContext.Current.OutRefArguments.AddRange(invocationExpr.ArgumentList.Arguments.Select(x => x.Expression));
                             return outRefInnerInvocationExpression;
                         }
                         if (RhinoRecognizer.IsVerifyAllExpectationsMethod(originalMemberSymbol))
@@ -125,8 +131,7 @@ namespace TestUpdaterAnalyzers
                             && invocationExpr.Expression is MemberAccessExpressionSyntax whenCalledMemberAccess
                             && invocationExpr.ArgumentList.Arguments.FirstOrDefault().Expression is SimpleLambdaExpressionSyntax whenCalledLambda)
                         {
-                            _invocationContext.Current.WhenCalledLambda = whenCalledLambda;
-                            return whenCalledMemberAccess.Expression;
+                            return UseInnerCallOrWhenDo(invocationExpr, whenCalledMemberAccess);
                         }
                     }
                 }
@@ -207,31 +212,36 @@ namespace TestUpdaterAnalyzers
             return base.VisitArgument(node);
         }
 
-        private SyntaxNode ExtractExpectAndStubInvocation(MemberAccessExpressionSyntax parentNode)
+        private SyntaxNode ExtractExpectAndStubInvocation(MemberAccessExpressionSyntax memberAccess)
         {
-            (IdentifierNameSyntax mockedObjectIdentifier, ArgumentListSyntax argumentList, ExpressionSyntax lambdaBody) = ExtractLambdaToParts(parentNode);
+            (IdentifierNameSyntax mockedObjectIdentifier, ArgumentListSyntax argumentList, ExpressionSyntax lambdaBody) = ExtractLambdaToParts(memberAccess);
             if (mockedObjectIdentifier == null)
-                return parentNode.Parent;
+                return memberAccess.Parent;
 
             // If Expect call, generate a syntax for VerifyAllExpectations calls. Filter out property getters as MemberAccessExpression
-            if (parentNode.Name.Identifier.ValueText == "Expect" && !(lambdaBody is MemberAccessExpressionSyntax))
+            if (memberAccess.Name.Identifier.ValueText == "Expect" && !(lambdaBody is MemberAccessExpressionSyntax))
             {
                 (var assertInvocation, var assertKey) = PrepandCallToInvocation(mockedObjectIdentifier, "Received", lambdaBody);
                 _methodContext.Current.Add(assertKey, assertInvocation);
             }
 
             // If it is an empty Expect or Stub invocation, add removable statements.
-            if (parentNode.Parent.Parent is ExpressionStatementSyntax && parentNode.Parent is InvocationExpressionSyntax removableInvocation)
+            if (memberAccess.Parent.Parent is ExpressionStatementSyntax && memberAccess.Parent is InvocationExpressionSyntax removableInvocation)
             {
                 RemoveInvocation(removableInvocation);
-                return parentNode.Parent;
+                return memberAccess.Parent;
+            }
+
+            // Has parent, but not Returns or Throws (ie. WhenCalled)
+            if (!_invocationContext.Current.HasReturn && !_invocationContext.Current.HasThrow && _invocationContext.Current.WhenCalledLambda != null
+                && memberAccess.Parent is InvocationExpressionSyntax parentInvocation)
+            {
+                string whenMethod = _invocationContext.Current.UseAnyArgs ? "WhenForAnyArgs" : "When";
+                return parentInvocation.WithExpression(memberAccess.WithName(SyntaxFactory.IdentifierName(whenMethod)));
             }
 
             // Else create new invocation
-            ExpressionSyntax invocation = CreateInvocationFromLambdaParts(lambdaBody);
-            if (argumentList != null)
-                _invocationContext.Current.OriginalArguments.AddRange(argumentList.Arguments);
-
+            ExpressionSyntax invocation = lambdaBody;
             return invocation;
         }
 
@@ -268,8 +278,6 @@ namespace TestUpdaterAnalyzers
                 arguments = mockMethodInvocation.ArgumentList;
             return (mockedObjectIdentifier, arguments, renamedLambda.Body as ExpressionSyntax);
         }
-
-        private static ExpressionSyntax CreateInvocationFromLambdaParts(ExpressionSyntax lambdaBody) => lambdaBody;
 
         private (ExpressionSyntax fullInvocation, string identifierToken) PrepandCallToInvocation(IdentifierNameSyntax mockedObjectIdentifier, string prepandCall, ExpressionSyntax lambdaBody)
         {
@@ -355,6 +363,14 @@ namespace TestUpdaterAnalyzers
             return memberAccess.WithName(SyntaxFactory.IdentifierName("ThrowsForAnyArgs"));
         }
 
+        private ExpressionSyntax UseInnerCallOrWhenDo(InvocationExpressionSyntax invocationExpr, MemberAccessExpressionSyntax whenCalledMemberAccess)
+        {
+            if (_invocationContext.Current.HasReturn || _invocationContext.Current.HasThrow)
+                return whenCalledMemberAccess.Expression;
+            else
+                return invocationExpr.WithExpression(whenCalledMemberAccess.WithName(SyntaxFactory.IdentifierName("Do")));
+        }
+
         private SyntaxNode UseSubstituteFor(MemberAccessExpressionSyntax memberAccess)
         {
             if (memberAccess.Name is GenericNameSyntax generateMockIdentifier)
@@ -407,7 +423,7 @@ namespace TestUpdaterAnalyzers
             return node;
         }
 
-        public SyntaxNode UseArgsAny(ArgumentSyntax argument, bool outParam = false)
+        private SyntaxNode UseArgsAny(ArgumentSyntax argument, bool outParam = false)
         {
             if (argument.Expression is MemberAccessExpressionSyntax finalMemberAccess)
             {
@@ -436,7 +452,7 @@ namespace TestUpdaterAnalyzers
             return argument;
         }
 
-        public SyntaxNode UseArgWith(ArgumentSyntax argument, ArgumentListSyntax lambdaArgument)
+        private SyntaxNode UseArgWith(ArgumentSyntax argument, ArgumentListSyntax lambdaArgument)
         {
             ExpressionSyntax beginExpression = null;
             var finalExpression = argument.Expression;
@@ -507,5 +523,6 @@ namespace TestUpdaterAnalyzers
             return SyntaxFactory.ArgumentList(SyntaxFactory.SingletonSeparatedList(
                 SyntaxFactory.Argument(lambdaArgument)));
         }
+
     }
 }

@@ -1,10 +1,16 @@
 ﻿using System;
+using System.Threading;
 
 namespace SampleBusinessLogic
 {
     public class Validator : IValidator
     {
         public bool IsEmptyNameValid { get; set; }
+
+        public void Run()
+        {
+            Thread.Yield();
+        }
 
         public bool TryValidate(Request request, out bool result)
         {

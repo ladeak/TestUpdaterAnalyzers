@@ -185,6 +185,16 @@ namespace RhinoXUnitFixture
             Assert.True(flag);
         }
 
+        [Fact]
+        public void WhenCalledNoReturns()
+        {
+            var mock = MockRepository.GenerateMock<IValidator>();
+            bool flag = false;
+            mock.Stub(x => x.Run()).WhenCalled(x => flag = true);
+            new BusinessLogic(mock).Run();
+            Assert.True(flag);
+        }
+
 
         [Fact]
         public void ComplexUnitTest()

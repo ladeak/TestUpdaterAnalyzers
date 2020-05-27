@@ -29,5 +29,7 @@ namespace SampleBusinessLogic
         {
             return _validator.IsEmptyNameValid;
         }
+
+        public void Run() => _validator.Run();
     }
 }
