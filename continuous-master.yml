@@ -15,7 +15,9 @@ steps:
     command: 'build'
     projects: |
       **/TestUpdaterAnalyzers.csproj
-      **/TestUpdaterAnalyzers.Tests.csproj
+      **/TestUpdaterAnalyzers.Test.csproj
+      **/ConvertNxUnitAnalyzer.csproj
+      **/ConvertNxUnitAnalyzer.Test.csproj
     arguments: '-c Debug'
   displayName: dotnet build
 
