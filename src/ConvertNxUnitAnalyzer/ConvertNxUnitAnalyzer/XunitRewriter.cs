@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -11,6 +12,12 @@ namespace ConvertNxUnitAnalyzer
     {
         private SemanticModel _semanticModel;
         private Document _originalDocument;
+        private SyntaxWalkContext<MethodDeclarationData, MethodDeclarationSyntax> _methodDeclarationContext;
+
+        public XunitRewriter()
+        {
+            _methodDeclarationContext = new SyntaxWalkContext<MethodDeclarationData, MethodDeclarationSyntax>(InitializeMethodDeclarationData);
+        }
 
         public async Task<Document> UpdateToXUnitAsync(Document document, SemanticModel semanticModel, TextSpan diagnosticSpan, CancellationToken cancellationToken)
         {
@@ -25,13 +32,32 @@ namespace ConvertNxUnitAnalyzer
         public override SyntaxNode VisitAttribute(AttributeSyntax node)
         {
             var symbolInfo = _semanticModel.GetSymbolInfo(node).Symbol;
-            var inner = base.VisitAttribute(node);
+            var newAttribute = base.VisitAttribute(node) as AttributeSyntax;
 
             if (NUnitRecognizer.IsTestAttribute(symbolInfo))
             {
                 return SyntaxFactory.Attribute(SyntaxFactory.IdentifierName("Fact"));
             }
-            return inner;
+            if (NUnitRecognizer.IsTestCaseAttribute(symbolInfo))
+            {
+                return newAttribute.WithName(SyntaxFactory.IdentifierName("InlineData"));
+            }
+            return newAttribute;
+        }
+
+        public override SyntaxNode VisitMethodDeclaration(MethodDeclarationSyntax node)
+        {
+            using (_methodDeclarationContext.Enter(node))
+            {
+                var newDeclaration = base.VisitMethodDeclaration(node) as MethodDeclarationSyntax;
+
+                if (_methodDeclarationContext.Current.HasTestCase)
+                {
+                    var theoryAttribute = SyntaxFactory.AttributeList(SyntaxFactory.SingletonSeparatedList(SyntaxFactory.Attribute(SyntaxFactory.IdentifierName("Theory"))));
+                    newDeclaration = newDeclaration.WithAttributeLists(newDeclaration.AttributeLists.Insert(0, theoryAttribute));
+                }
+                return newDeclaration;
+            }
         }
 
         public override SyntaxNode VisitUsingDirective(UsingDirectiveSyntax node)
@@ -46,5 +72,10 @@ namespace ConvertNxUnitAnalyzer
             return inner;
         }
 
+        private MethodDeclarationData InitializeMethodDeclarationData(MethodDeclarationSyntax node)
+        {
+            var initializer = new MethodDeclarationWalker(_semanticModel);
+            return initializer.GetMethodDeclarationData(node);
+        }
     }
 }
