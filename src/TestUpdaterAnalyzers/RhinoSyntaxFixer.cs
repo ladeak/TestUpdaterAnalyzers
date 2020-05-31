@@ -37,6 +37,8 @@ namespace TestUpdaterAnalyzers
                 documentUpdater.AddNSubstituteExceptionExtensionsUsing();
             if (rewriter.UseReceivedExtensions)
                 documentUpdater.AddNSubstituteReceivedExtensionsUsing();
+            if (!localScope)
+                documentUpdater.RemoveRhinoMocksUsing();
             _document = documentUpdater.Complete();
 
             return _document;

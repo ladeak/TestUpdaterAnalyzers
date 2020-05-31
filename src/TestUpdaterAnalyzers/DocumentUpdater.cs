@@ -3,6 +3,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Editing;
 using Microsoft.CodeAnalysis.Text;
+using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -45,6 +46,16 @@ namespace TestUpdaterAnalyzers
                     SyntaxFactory.IdentifierName("NSubstitute"),
                     SyntaxFactory.IdentifierName("ExceptionExtensions")));
                 _editor.InsertBefore((_editor.OriginalRoot as CompilationUnitSyntax).Usings.FirstOrDefault(), newUsing);
+            }
+        }
+
+        public void RemoveRhinoMocksUsing()
+        {
+            CompilationUnitSyntax root = _editor.OriginalDocument.GetSyntaxRootAsync().Result as CompilationUnitSyntax;
+            var rhinoUsing = root.Usings.First(x => x.Name.GetText().ToString() == "Rhino.Mocks");
+            if (rhinoUsing is { })
+            {
+                _editor.RemoveNode(rhinoUsing);
             }
         }
 

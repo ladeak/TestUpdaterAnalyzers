@@ -74,7 +74,6 @@ namespace RhinoXUnitFixture
 ";
             var expectedSource = @"
 using NSubstitute;
-using Rhino.Mocks;
 using SampleBusinessLogic;
 using Xunit;
 
@@ -125,7 +124,6 @@ namespace RhinoXUnitFixture
 ";
             var expectedSource = @"
 using NSubstitute;
-using Rhino.Mocks;
 using SampleBusinessLogic;
 using Xunit;
 
@@ -181,7 +179,6 @@ namespace RhinoXUnitFixture
 ";
             var expectedSource = @"
 using NSubstitute;
-using Rhino.Mocks;
 using SampleBusinessLogic;
 using Xunit;
 
