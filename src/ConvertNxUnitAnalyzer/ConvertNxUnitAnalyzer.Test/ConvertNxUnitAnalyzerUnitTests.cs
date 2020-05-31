@@ -56,39 +56,45 @@ namespace NUnitToXUnitTests
 
 
         [TestMethod]
-        public async Task TestMethod2()
+        public async Task TestAttributeReplacedWithFact()
         {
-            var test = @"
-using NUnit.Framework;
+            var source = 
+@"using NUnit.Framework;
 
 namespace NUnitToXUnitTests
 {
-    public class NUnitTests
+    public class UnitTests
     {
         [Test]
         public void Test1()
         {
-            Assert.Pass();
         }
     }
 }";
 
-            var fixtest = @"using Xunit;
+            var fixtest = 
+@"using Xunit;
 
 namespace NUnitToXUnitTests
 {
-    public class xUnitTests
+    public class UnitTests
     {
         [Fact]
         public void Test1()
         {
-            Assert.True(true);
         }
     }
 }";
 
-            var expected = Verify.Diagnostic("ADConvertNxUnitAnalyzer").WithLocation(11, 15).WithArguments("TypeName");
-            await Verify.VerifyCodeFixAsync(test, expected, fixtest);
+            var expected = Verify.Diagnostic("ADConvertNxUnitAnalyzer").WithLocation(7, 9).WithArguments("Test1");
+
+            var fixture = new CSharpCodeFixTest<ConvertNxUnitAnalyzer, ConvertNxUnitCodeFixProvider, MSTestVerifier>();
+            fixture.ReferenceAssemblies = fixture.ReferenceAssemblies.AddPackages(ImmutableArray.Create(new PackageIdentity("nunit", "3.12.0")));
+            fixture.ReferenceAssemblies = fixture.ReferenceAssemblies.AddPackages(ImmutableArray.Create(new PackageIdentity("xunit", "2.4.1")));
+            fixture.TestCode = source;
+            fixture.FixedCode = fixtest;
+            fixture.ExpectedDiagnostics.Add(expected);
+            await fixture.RunAsync();
         }
     }
 }

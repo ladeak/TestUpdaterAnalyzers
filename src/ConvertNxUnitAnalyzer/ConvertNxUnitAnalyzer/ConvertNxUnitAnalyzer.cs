@@ -40,7 +40,7 @@ namespace ConvertNxUnitAnalyzer
                 foreach (var attribute in methodSyntax.AttributeLists.SelectMany(x => x.Attributes))
                 {
                     var attributeSymbol = context.SemanticModel.GetSymbolInfo(attribute).Symbol as IMethodSymbol;
-                    if (IsSymbol(attributeSymbol, ".ctor", "TestAttribute"))
+                    if (NUnitRecognizer.IsTestAttribute(attributeSymbol))
                     {
                         var diagnostic = Diagnostic.Create(Rule, methodSyntax.GetLocation(), methodSyntax.Identifier.ValueText);
                         context.ReportDiagnostic(diagnostic);
@@ -49,11 +49,5 @@ namespace ConvertNxUnitAnalyzer
             }
         }
 
-        private static bool IsSymbol(ISymbol symbolsType, string name, string type, string assembly = "nunit.framework")
-        {
-            return symbolsType.Name == name
-                && symbolsType.OriginalDefinition.ContainingAssembly.MetadataName == assembly
-                && symbolsType.OriginalDefinition.ContainingType.Name == type;
-        }
     }
 }
