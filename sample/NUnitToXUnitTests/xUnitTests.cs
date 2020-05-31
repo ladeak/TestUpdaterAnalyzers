@@ -5,9 +5,15 @@ namespace NUnitToXUnitTests
     public class xUnitTests
     {
         [Fact]
-        public void Test1()
+        public void Test()
         {
-            Assert.True(true);
+        }
+
+        [Theory]
+        [InlineData("value")]
+        [InlineData("value1")]
+        public void TestCase(string value)
+        {
         }
     }
 }

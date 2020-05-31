@@ -8,6 +8,8 @@ namespace ConvertNxUnitAnalyzer
 
         public static bool IsTestAttribute(ISymbol symbol) => IsSymbol(symbol, ".ctor", "TestAttribute");
 
+        public static bool IsTestCaseAttribute(ISymbol symbol) => IsSymbol(symbol, ".ctor", "TestCaseAttribute");
+
         private static bool IsSymbol(ISymbol symbolsType, string name, string type, string assembly = "nunit.framework")
         {
             return symbolsType.Name == name

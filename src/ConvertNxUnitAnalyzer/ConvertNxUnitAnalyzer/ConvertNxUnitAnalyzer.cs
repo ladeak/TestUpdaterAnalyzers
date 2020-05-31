@@ -40,10 +40,12 @@ namespace ConvertNxUnitAnalyzer
                 foreach (var attribute in methodSyntax.AttributeLists.SelectMany(x => x.Attributes))
                 {
                     var attributeSymbol = context.SemanticModel.GetSymbolInfo(attribute).Symbol as IMethodSymbol;
-                    if (NUnitRecognizer.IsTestAttribute(attributeSymbol))
+                    if (NUnitRecognizer.IsTestAttribute(attributeSymbol)
+                        || NUnitRecognizer.IsTestCaseAttribute(attributeSymbol))
                     {
                         var diagnostic = Diagnostic.Create(Rule, methodSyntax.GetLocation(), methodSyntax.Identifier.ValueText);
                         context.ReportDiagnostic(diagnostic);
+                        return;
                     }
                 }
             }

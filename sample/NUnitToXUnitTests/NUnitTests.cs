@@ -5,9 +5,14 @@ namespace NUnitToXUnitTests
     public class NUnitTests
     {
         [Test]
-        public void Test1()
+        public void Test()
         {
-            Assert.Pass();
+        }
+
+        [TestCase("value")]
+        [TestCase("value1")]
+        public void TestCase(string value)
+        {
         }
     }
 }
