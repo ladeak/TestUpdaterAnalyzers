@@ -1,0 +1,24 @@
+pr: 
+  - master
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'build'
+    projects: |
+      **/TestUpdaterAnalyzers.csproj
+      **/TestUpdaterAnalyzers.Test.csproj
+      **/ConvertNxUnitAnalyzer.csproj
+      **/ConvertNxUnitAnalyzer.Test.csproj
+    arguments: '-c Debug'
+  displayName: dotnet build
+
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'test'
+    projects: '**/*.Test.csproj'
+  displayName: dotnet test
+
