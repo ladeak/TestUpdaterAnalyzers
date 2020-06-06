@@ -14,6 +14,8 @@ namespace ConvertNxUnitAnalyzer
 
         public static bool IsTestCaseData(ISymbol symbol) => IsNamespaceSymbol(symbol, "TestCaseData");
 
+        public static bool IsTestCaseDataCtor(ISymbol symbol) => IsSymbol(symbol, ".ctor", "TestCaseData");
+
         private static bool IsSymbol(ISymbol symbolsType, string name, string type, string assembly = "nunit.framework")
         {
             return symbolsType != null 

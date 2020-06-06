@@ -87,7 +87,7 @@ namespace NUnitToXUnitTests
                 yield return new object[] { ""l"", 4 };
             }
         }
-      
+
         [Theory]
         [MemberData(nameof(TestData))]
         public void TestCaseSource(string value, int value2)
@@ -145,7 +145,7 @@ namespace NUnitToXUnitTests
                 yield return new object[] { ""l"", 4 };
             }
         }
-      
+
         [Theory]
         [MemberData(""TestData"")]
         public void TestCaseSource(string value, int value2)

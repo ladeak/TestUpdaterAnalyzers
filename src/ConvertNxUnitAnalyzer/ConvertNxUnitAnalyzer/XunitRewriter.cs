@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -93,7 +95,7 @@ namespace ConvertNxUnitAnalyzer
             var newProperty = base.VisitPropertyDeclaration(node) as PropertyDeclarationSyntax;
             if (_classDeclarationContext.Current.TestCaseSources.Any(x => x.ValueText == newProperty.Identifier.ValueText))
             {
-                if (newProperty.Type is GenericNameSyntax genericType
+                if (node.Type is GenericNameSyntax genericType
                     && genericType.TypeArgumentList.Arguments.Count == 1
                     && genericType.TypeArgumentList.Arguments.First() is IdentifierNameSyntax closedType)
                 {
@@ -119,8 +121,29 @@ namespace ConvertNxUnitAnalyzer
 
             }
 
-
             return newProperty;
+        }
+
+        public override SyntaxNode VisitObjectCreationExpression(ObjectCreationExpressionSyntax node)
+        {
+            var newObjectCreation = base.VisitObjectCreationExpression(node) as ObjectCreationExpressionSyntax;
+
+            if (!NUnitRecognizer.IsTestCaseDataCtor(_semanticModel.GetSymbolInfo(newObjectCreation).Symbol))
+                return newObjectCreation;
+
+            var arrayExprssion = SyntaxFactory.ArrayType(
+                                     SyntaxFactory.PredefinedType(
+                                         SyntaxFactory.Token(SyntaxKind.ObjectKeyword)
+                                     ), SyntaxFactory.SingletonList(SyntaxFactory.ArrayRankSpecifier(
+                                         SyntaxFactory.SingletonSeparatedList<ExpressionSyntax>(SyntaxFactory.OmittedArraySizeExpression())))
+                                 );
+
+            IEnumerable<ExpressionSyntax> args = newObjectCreation.ArgumentList.Arguments.Select(x => x.Expression);
+
+            var arrayInitializerExpression = SyntaxFactory.InitializerExpression(SyntaxKind.ArrayInitializerExpression,
+                SyntaxFactory.SeparatedList(args));
+            var arrayCreationExpression = SyntaxFactory.ArrayCreationExpression(arrayExprssion, arrayInitializerExpression);
+            return arrayCreationExpression;
         }
 
         private MethodDeclarationData InitializeMethodDeclarationData(MethodDeclarationSyntax node)
