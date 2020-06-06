@@ -74,5 +74,44 @@ namespace NUnitToXUnitTests
             await VerifyCodeFix.VerifyFixAsync(source, fixtest, expected);
         }
 
+        [TestMethod]
+        public async Task TestAndTestCaseAttributeReplacedWithInlineData()
+        {
+            var source =
+@"using NUnit.Framework;
+
+namespace NUnitToXUnitTests
+{
+    public class UnitTests
+    {
+        [Test]
+        [TestCase(""value"")]
+        [TestCase(""value1"")]
+        public void TestCase(string value)
+        {
+        }
+    }
+}";
+
+            var fixtest =
+@"using Xunit;
+
+namespace NUnitToXUnitTests
+{
+    public class UnitTests
+    {
+        [Theory]
+        [InlineData(""value"")]
+        [InlineData(""value1"")]
+        public void TestCase(string value)
+        {
+        }
+    }
+}";
+
+            var expected = Verify.Diagnostic("ADConvertNxUnitAnalyzer").WithLocation(7, 9).WithArguments("TestCase");
+            await VerifyCodeFix.VerifyFixAsync(source, fixtest, expected);
+        }
+
     }
 }

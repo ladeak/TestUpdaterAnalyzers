@@ -33,6 +33,14 @@ namespace ConvertNxUnitAnalyzer
             {
                 _methodDeclarationContext.Current.HasTestCase = true;
             }
+            if (NUnitRecognizer.IsTestAttribute(symbolInfo))
+            {
+                _methodDeclarationContext.Current.HasTestAttribute = true;
+            }
+            if (NUnitRecognizer.IsTestCaseSourceAttribute(symbolInfo))
+            {
+                _methodDeclarationContext.Current.HasTestCaseSourceAttribute = true;
+            }
         }
     }
 }
