@@ -48,7 +48,7 @@ namespace NUnitToXUnitTests
         [Fact]
         public void TestAssertNull()
         {
-            Assert.NotNull(null);
+            Assert.NotNull(new object());
         }
     }
 }

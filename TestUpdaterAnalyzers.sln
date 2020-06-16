@@ -13,11 +13,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RhinoXUnitFixture", "sample
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SampleBusinessLogic", "sample\SampleBusinessLogic\SampleBusinessLogic.csproj", "{429EE0DB-BC7C-4CC0-9F46-C227FCD8C1A2}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NXunitConverterAnalyzer", "src\ConvertNxUnitAnalyzer\ConvertNxUnitAnalyzer\NXunitConverterAnalyzer.csproj", "{3E26F358-CA5D-42E8-9260-7D0AF86064A5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NXunitConverterAnalyzer", "src\NXunitConverterAnalyzer\NXunitConverterAnalyzer\NXunitConverterAnalyzer.csproj", "{3E26F358-CA5D-42E8-9260-7D0AF86064A5}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NXunitConverterAnalyzer.Test", "src\ConvertNxUnitAnalyzer\ConvertNxUnitAnalyzer.Test\NXunitConverterAnalyzer.Test.csproj", "{40CBCA89-8854-4FF9-90E3-0EF3DFEA77E4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NXunitConverterAnalyzer.Test", "src\NXunitConverterAnalyzer\NXunitConverterAnalyzer.Test\NXunitConverterAnalyzer.Test.csproj", "{40CBCA89-8854-4FF9-90E3-0EF3DFEA77E4}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConvertNxUnitAnalyzer.Vsix", "src\ConvertNxUnitAnalyzer\ConvertNxUnitAnalyzer.Vsix\ConvertNxUnitAnalyzer.Vsix.csproj", "{4429126F-C65A-4D82-9DFC-697075BF9ADE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NXunitConverterAnalyzer.Vsix", "src\NXunitConverterAnalyzer\NXunitConverterAnalyzer.Vsix\NXunitConverterAnalyzer.Vsix.csproj", "{4429126F-C65A-4D82-9DFC-697075BF9ADE}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "RhinoToNSubstitute", "RhinoToNSubstitute", "{5433AF6F-797D-4BA1-88B0-57978032EBC2}"
 EndProject
