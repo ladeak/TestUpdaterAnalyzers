@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
   <Metadata>
-    <Identity Id="ConvertNxUnitAnalyzer.d067497a-b67f-4367-b121-de8831ceb02e" Version="1.0" Language="en-US" Publisher="ladea"/>
-    <DisplayName>ConvertNxUnitAnalyzer</DisplayName>
+    <Identity Id="NXunitConverterAnalyzer.d067497a-b67f-4367-b121-de8831ceb02e" Version="1.0" Language="en-US" Publisher="ladea"/>
+    <DisplayName>NXunitConverterAnalyzer</DisplayName>
     <Description xml:space="preserve">This is a sample diagnostic extension for the .NET Compiler Platform ("Roslyn").</Description>
   </Metadata>
   <Installation>
@@ -12,8 +12,8 @@
     <Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" d:Source="Manual" Version="[4.5,)" />
   </Dependencies>
   <Assets>
-    <Asset Type="Microsoft.VisualStudio.MefComponent" d:Source="Project" d:ProjectName="ConvertNxUnitAnalyzer" Path="|ConvertNxUnitAnalyzer|"/>
-    <Asset Type="Microsoft.VisualStudio.Analyzer" d:Source="Project" d:ProjectName="ConvertNxUnitAnalyzer" Path="|ConvertNxUnitAnalyzer|"/>
+    <Asset Type="Microsoft.VisualStudio.MefComponent" d:Source="Project" d:ProjectName="NXunitConverterAnalyzer" Path="|NXunitConverterAnalyzer|"/>
+    <Asset Type="Microsoft.VisualStudio.Analyzer" d:Source="Project" d:ProjectName="NXunitConverterAnalyzer" Path="|NXunitConverterAnalyzer|"/>
   </Assets>
   <Prerequisites>
     <Prerequisite Id="Microsoft.VisualStudio.Component.CoreEditor" Version="[15.0,)" DisplayName="Visual Studio core editor" />

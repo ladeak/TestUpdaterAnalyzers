@@ -8,24 +8,25 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <PackageId>ConvertNxUnitAnalyzer</PackageId>
-    <PackageVersion>1.0.0.0</PackageVersion>
-    <Authors>ladea</Authors>
-    <PackageLicenseUrl>http://LICENSE_URL_HERE_OR_DELETE_THIS_LINE</PackageLicenseUrl>
-    <PackageProjectUrl>http://PROJECT_URL_HERE_OR_DELETE_THIS_LINE</PackageProjectUrl>
-    <PackageIconUrl>http://ICON_URL_HERE_OR_DELETE_THIS_LINE</PackageIconUrl>
-    <RepositoryUrl>http://REPOSITORY_URL_HERE_OR_DELETE_THIS_LINE</RepositoryUrl>
+    <PackageId>LaDeak.NXunitConverterAnalyzer</PackageId>
+    <Authors>ladeak</Authors>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-    <Description>ConvertNxUnitAnalyzer</Description>
-    <PackageReleaseNotes>Summary of changes made in this release of the package.</PackageReleaseNotes>
-    <Copyright>Copyright</Copyright>
-    <PackageTags>ConvertNxUnitAnalyzer, analyzers</PackageTags>
+    <Description>This package offers analyzers to update NUnit to XUnit tests.</Description>
+    <Copyright>ladeak</Copyright>
+    <PackageTags>NUnit, xUnit, converter, conversion, analyzers</PackageTags>
     <NoPackageAnalysis>true</NoPackageAnalysis>
+    <RepositoryUrl>https://github.com/ladeak/TestUpdaterAnalyzers</RepositoryUrl>
+    <PackageLicenseUrl>https://github.com/ladeak/TestUpdaterAnalyzers/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageVersion>0.0.30</PackageVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="2.9.8" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="3.3.1" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="3.6.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -36,6 +37,7 @@
   <ItemGroup>
     <None Update="tools\*.ps1" CopyToOutputDirectory="Always" Pack="true" PackagePath="" />
     <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    <None Include="icon.png" Pack="True" PackagePath="" />
   </ItemGroup>
 
 </Project>
