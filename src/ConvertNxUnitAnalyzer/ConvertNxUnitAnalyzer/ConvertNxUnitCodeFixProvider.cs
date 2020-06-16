@@ -9,7 +9,7 @@ using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.Rename;
 
-namespace ConvertNxUnitAnalyzer
+namespace NXunitConverterAnalyzer
 {
     [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(ConvertNxUnitCodeFixProvider)), Shared]
     public class ConvertNxUnitCodeFixProvider : CodeFixProvider
@@ -18,7 +18,7 @@ namespace ConvertNxUnitAnalyzer
 
         public sealed override ImmutableArray<string> FixableDiagnosticIds
         {
-            get { return ImmutableArray.Create(ConvertNxUnitAnalyzer.DiagnosticId); }
+            get { return ImmutableArray.Create(NXunitConverterAnalyzer.DiagnosticId); }
         }
 
         public sealed override FixAllProvider GetFixAllProvider()
@@ -39,7 +39,7 @@ namespace ConvertNxUnitAnalyzer
                         var rewriter = new XunitRewriter();
                         return await rewriter.UpdateToXUnitAsync(context.Document, await context.Document.GetSemanticModelAsync(), diagnosticSpan, c);
                     },
-                    equivalenceKey: ConvertNxUnitAnalyzer.DiagnosticId),
+                    equivalenceKey: NXunitConverterAnalyzer.DiagnosticId),
                 diagnostic);
         }
     }

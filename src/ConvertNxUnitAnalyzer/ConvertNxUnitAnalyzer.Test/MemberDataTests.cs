@@ -1,10 +1,10 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Threading.Tasks;
 using Verify = Microsoft.CodeAnalysis.CSharp.Testing.MSTest.CodeFixVerifier<
-    ConvertNxUnitAnalyzer.ConvertNxUnitAnalyzer,
-    ConvertNxUnitAnalyzer.ConvertNxUnitCodeFixProvider>;
+    NXunitConverterAnalyzer.NXunitConverterAnalyzer,
+    NXunitConverterAnalyzer.ConvertNxUnitCodeFixProvider>;
 
-namespace ConvertNxUnitAnalyzer.Test
+namespace NXunitConverterAnalyzer.Test
 {
     [TestClass]
     public class MemberDataTests
@@ -37,7 +37,7 @@ namespace NUnitToXUnitTests
     }
 }";
 
-            var expected = Verify.Diagnostic("ADConvertNxUnitAnalyzer").WithLocation(18, 9).WithArguments("TestCaseSource");
+            var expected = Verify.Diagnostic("ADNXunitConverterAnalyzer").WithLocation(18, 9).WithArguments("TestCaseSource");
             await VerifyCodeFix.VerifyAnalyzerAsync(source, expected);
         }
 
@@ -96,7 +96,7 @@ namespace NUnitToXUnitTests
     }
 }";
 
-            var expected = Verify.Diagnostic("ADConvertNxUnitAnalyzer").WithLocation(18, 9).WithArguments("TestCaseSource");
+            var expected = Verify.Diagnostic("ADNXunitConverterAnalyzer").WithLocation(18, 9).WithArguments("TestCaseSource");
             await VerifyCodeFix.VerifyFixAsync(source, fixtest, expected);
         }
 
@@ -154,7 +154,7 @@ namespace NUnitToXUnitTests
     }
 }";
 
-            var expected = Verify.Diagnostic("ADConvertNxUnitAnalyzer").WithLocation(18, 9).WithArguments("TestCaseSource");
+            var expected = Verify.Diagnostic("ADNXunitConverterAnalyzer").WithLocation(18, 9).WithArguments("TestCaseSource");
             await VerifyCodeFix.VerifyFixAsync(source, fixtest, expected);
         }
 
@@ -213,7 +213,7 @@ namespace NUnitToXUnitTests
     }
 }";
 
-            var expected = Verify.Diagnostic("ADConvertNxUnitAnalyzer").WithLocation(18, 9).WithArguments("TestCaseSource");
+            var expected = Verify.Diagnostic("ADNXunitConverterAnalyzer").WithLocation(18, 9).WithArguments("TestCaseSource");
             await VerifyCodeFix.VerifyFixAsync(source, fixtest, expected);
         }
     }

@@ -10,8 +10,8 @@ steps:
     projects: |
       **/TestUpdaterAnalyzers.csproj
       **/TestUpdaterAnalyzers.Test.csproj
-      **/ConvertNxUnitAnalyzer.csproj
-      **/ConvertNxUnitAnalyzer.Test.csproj
+      **/NXunitConverterAnalyzer.csproj
+      **/NXunitConverterAnalyzer.Test.csproj
     arguments: '-c $(BuildConfiguration)'
   displayName: dotnet build
 

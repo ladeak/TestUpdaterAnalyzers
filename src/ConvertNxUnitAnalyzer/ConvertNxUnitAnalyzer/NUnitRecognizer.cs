@@ -1,6 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 
-namespace ConvertNxUnitAnalyzer
+namespace NXunitConverterAnalyzer
 {
     public static class NUnitRecognizer
     {
@@ -15,6 +15,16 @@ namespace ConvertNxUnitAnalyzer
         public static bool IsTestCaseData(ISymbol symbol) => IsNamespaceSymbol(symbol, "TestCaseData");
 
         public static bool IsTestCaseDataCtor(ISymbol symbol) => IsSymbol(symbol, ".ctor", "TestCaseData");
+
+        public static bool IsAssertIsTrueMethod(ISymbol symbol) => IsSymbol(symbol, "IsTrue", "Assert");
+
+        public static bool IsAssertIsFalseMethod(ISymbol symbol) => IsSymbol(symbol, "IsFalse", "Assert");
+
+        public static bool IsAssertAreEqualMethod(ISymbol symbol) => IsSymbol(symbol, "AreEqual", "Assert");
+
+        public static bool IsAssertIsNullMethod(ISymbol symbol) => IsSymbol(symbol, "IsNull", "Assert");
+
+        public static bool IsAssertIsNotNullMethod(ISymbol symbol) => IsSymbol(symbol, "IsNotNull", "Assert");
 
         private static bool IsSymbol(ISymbol symbolsType, string name, string type, string assembly = "nunit.framework")
         {

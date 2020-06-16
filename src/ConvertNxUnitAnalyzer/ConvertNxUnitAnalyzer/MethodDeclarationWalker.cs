@@ -3,7 +3,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 
-namespace ConvertNxUnitAnalyzer
+namespace NXunitConverterAnalyzer
 {
     public class MethodDeclarationWalker : CSharpSyntaxWalker
     {

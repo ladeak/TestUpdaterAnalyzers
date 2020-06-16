@@ -1,7 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using System;
 
-namespace ConvertNxUnitAnalyzer
+namespace NXunitConverterAnalyzer
 {
     public class SyntaxWalkContext<T> : IDisposable where T : new()
     {

@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ConvertNxUnitAnalyzer\ConvertNxUnitAnalyzer.csproj" />
+    <ProjectReference Include="..\ConvertNxUnitAnalyzer\NXunitConverterAnalyzer.csproj" />
   </ItemGroup>
 
 </Project>

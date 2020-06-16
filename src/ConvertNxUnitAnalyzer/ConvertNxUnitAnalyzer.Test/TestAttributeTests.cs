@@ -1,14 +1,10 @@
-﻿using Microsoft.CodeAnalysis.CSharp.Testing;
-using Microsoft.CodeAnalysis.Testing;
-using Microsoft.CodeAnalysis.Testing.Verifiers;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Collections.Immutable;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Threading.Tasks;
 using Verify = Microsoft.CodeAnalysis.CSharp.Testing.MSTest.CodeFixVerifier<
-    ConvertNxUnitAnalyzer.ConvertNxUnitAnalyzer,
-    ConvertNxUnitAnalyzer.ConvertNxUnitCodeFixProvider>;
+    NXunitConverterAnalyzer.NXunitConverterAnalyzer,
+    NXunitConverterAnalyzer.ConvertNxUnitCodeFixProvider>;
 
-namespace ConvertNxUnitAnalyzer.Test
+namespace NXunitConverterAnalyzer.Test
 {
     [TestClass]
     public class TestAttributeTests
@@ -39,10 +35,9 @@ namespace NUnitToXUnitTests
     }
 }";
 
-            var expected = Verify.Diagnostic("ADConvertNxUnitAnalyzer").WithLocation(7, 9).WithArguments("Test1");
+            var expected = Verify.Diagnostic("ADNXunitConverterAnalyzer").WithLocation(7, 9).WithArguments("Test1");
             await VerifyCodeFix.VerifyAnalyzerAsync(source, expected);
         }
-
 
         [TestMethod]
         public async Task TestAttributeReplacedWithFact()
@@ -75,9 +70,8 @@ namespace NUnitToXUnitTests
     }
 }";
 
-            var expected = Verify.Diagnostic("ADConvertNxUnitAnalyzer").WithLocation(7, 9).WithArguments("Test1");
+            var expected = Verify.Diagnostic("ADNXunitConverterAnalyzer").WithLocation(7, 9).WithArguments("Test1");
             await VerifyCodeFix.VerifyFixAsync(source, fixtest, expected);
         }
-
     }
 }

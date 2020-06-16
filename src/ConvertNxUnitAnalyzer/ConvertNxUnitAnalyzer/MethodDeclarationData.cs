@@ -1,4 +1,4 @@
-﻿namespace ConvertNxUnitAnalyzer
+﻿namespace NXunitConverterAnalyzer
 {
     public class MethodDeclarationData
     {

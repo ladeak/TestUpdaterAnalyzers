@@ -9,7 +9,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 
-namespace ConvertNxUnitAnalyzer
+namespace NXunitConverterAnalyzer
 {
     public class XunitRewriter : CSharpSyntaxRewriter
     {
@@ -144,6 +144,29 @@ namespace ConvertNxUnitAnalyzer
                 SyntaxFactory.SeparatedList(args));
             var arrayCreationExpression = SyntaxFactory.ArrayCreationExpression(arrayExprssion, arrayInitializerExpression);
             return arrayCreationExpression;
+        }
+
+        public override SyntaxNode VisitInvocationExpression(InvocationExpressionSyntax node)
+        {
+            var symbol = _semanticModel.GetSymbolInfo(node).Symbol as IMethodSymbol;
+            var innerInvocation = base.VisitInvocationExpression(node) as InvocationExpressionSyntax;
+
+            if (NUnitRecognizer.IsAssertIsTrueMethod(symbol) && innerInvocation.Expression is MemberAccessExpressionSyntax isTrueMemberAccess && innerInvocation.ArgumentList.Arguments.Count < 3)
+                return innerInvocation.WithExpression(isTrueMemberAccess.WithName(SyntaxFactory.IdentifierName("True")));
+
+            if (NUnitRecognizer.IsAssertIsFalseMethod(symbol) && innerInvocation.Expression is MemberAccessExpressionSyntax isFalseMemberAccess && innerInvocation.ArgumentList.Arguments.Count < 3)
+                return innerInvocation.WithExpression(isFalseMemberAccess.WithName(SyntaxFactory.IdentifierName("False")));
+
+            if (NUnitRecognizer.IsAssertAreEqualMethod(symbol) && innerInvocation.Expression is MemberAccessExpressionSyntax areEqualMemberAccess && innerInvocation.ArgumentList.Arguments.Count == 2)
+                return innerInvocation.WithExpression(areEqualMemberAccess.WithName(SyntaxFactory.IdentifierName("Equal")));
+
+            if (NUnitRecognizer.IsAssertIsNullMethod(symbol) && innerInvocation.Expression is MemberAccessExpressionSyntax isNullMemberAccess && innerInvocation.ArgumentList.Arguments.Count == 1)
+                return innerInvocation.WithExpression(isNullMemberAccess.WithName(SyntaxFactory.IdentifierName("Null")));
+
+            if (NUnitRecognizer.IsAssertIsNotNullMethod(symbol) && innerInvocation.Expression is MemberAccessExpressionSyntax isNotNullMemberAccess && innerInvocation.ArgumentList.Arguments.Count == 1)
+                return innerInvocation.WithExpression(isNotNullMemberAccess.WithName(SyntaxFactory.IdentifierName("NotNull")));
+
+            return innerInvocation;
         }
 
         private MethodDeclarationData InitializeMethodDeclarationData(MethodDeclarationSyntax node)

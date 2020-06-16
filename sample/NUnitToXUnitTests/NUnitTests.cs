@@ -37,5 +37,23 @@ namespace NUnitToXUnitTests
         public void TestCaseSource(string value, int value2)
         {
         }
+
+        [Test]
+        public void TestAssertTrue()
+        {
+            Assert.IsTrue(true);
+        }
+
+        [Test]
+        public void TestAssertAreEqual()
+        {
+            Assert.AreEqual(0, 0);
+        }
+
+        [Test]
+        public void TestAssertNull()
+        {
+            Assert.IsNull(null);
+        }
     }
 }

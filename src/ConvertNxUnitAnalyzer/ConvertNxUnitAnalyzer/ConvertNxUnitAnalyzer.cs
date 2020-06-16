@@ -8,12 +8,12 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-namespace ConvertNxUnitAnalyzer
+namespace NXunitConverterAnalyzer
 {
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
-    public class ConvertNxUnitAnalyzer : DiagnosticAnalyzer
+    public class NXunitConverterAnalyzer : DiagnosticAnalyzer
     {
-        public const string DiagnosticId = "ADConvertNxUnitAnalyzer";
+        public const string DiagnosticId = "ADNXunitConverterAnalyzer";
 
         // You can change these strings in the Resources.resx file. If you do not want your analyzer to be localize-able, you can use regular strings for Title and MessageFormat.
         // See https://github.com/dotnet/roslyn/blob/master/docs/analyzers/Localizing%20Analyzers.md for more on localization

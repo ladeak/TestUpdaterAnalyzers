@@ -32,5 +32,23 @@ namespace NUnitToXUnitTests
         public void MemberData(string value, int value2)
         {
         }
+
+        [Fact]
+        public void TestAssertTrue()
+        {
+            Assert.True(true);
+        }
+
+        [Fact]
+        public void TestAssertAreEqual()
+        {
+            Assert.Equal(0, 0);
+        }
+
+        [Fact]
+        public void TestAssertNull()
+        {
+            Assert.NotNull(null);
+        }
     }
 }
