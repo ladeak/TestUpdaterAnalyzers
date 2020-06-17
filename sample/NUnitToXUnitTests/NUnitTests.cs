@@ -55,5 +55,29 @@ namespace NUnitToXUnitTests
         {
             Assert.IsNull(null);
         }
+
+        [Test]
+        public void TestAssertSame()
+        {
+            var o = new object();
+            Assert.AreSame(o, o);
+        }
+
+        [Test]
+        public void TestAssertEmpty()
+        {
+            Assert.IsEmpty(new List<object>());
+            Assert.IsEmpty("");
+        }
+
+        //Assert.That
+        //Assert.Contains
+        //Assert.Throws
+        //Assert.ThrowsAsync
+        //Assert.DoesNotThrow
+        //Assert.DoesNotThrowAsync
+        //Assert.IsAssignableFrom
+        //Assert.IsInstanceOf
+        //Assert.Zero, Pass, Fail
     }
 }

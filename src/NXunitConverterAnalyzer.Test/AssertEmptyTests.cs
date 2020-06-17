@@ -7,10 +7,49 @@ using Verify = Microsoft.CodeAnalysis.CSharp.Testing.MSTest.CodeFixVerifier<
 namespace NXunitConverterAnalyzer.Test
 {
     [TestClass]
-    public class AssertEqualTests
+    public class AssertEmptyTests
     {
         [TestMethod]
-        public async Task AssertAreEqualReplacedAssertEqual()
+        public async Task AssertIsEmptyCollectionReplacedAssertEmpty()
+        {
+            var source =
+@"using NUnit.Framework;
+using System.Collections.Generic;
+
+namespace NUnitToXUnitTests
+{
+    public class UnitTests
+    {
+        [Test]
+        public void TestAssertEmpty()
+        {
+            Assert.IsEmpty(new List<object>());
+        }
+    }
+}";
+
+            var fixtest =
+@"using Xunit;
+using System.Collections.Generic;
+
+namespace NUnitToXUnitTests
+{
+    public class UnitTests
+    {
+        [Fact]
+        public void TestAssertEmpty()
+        {
+            Assert.Empty(new List<object>());
+        }
+    }
+}";
+
+            var expected = Verify.Diagnostic("ADNXunitConverterAnalyzer").WithLocation(8, 9).WithArguments("TestAssertEmpty");
+            await VerifyCodeFix.VerifyFixAsync(source, fixtest, expected);
+        }
+
+        [TestMethod]
+        public async Task AssertIsEmptyStringReplacedAssertEqual()
         {
             var source =
 @"using NUnit.Framework;
@@ -20,9 +59,9 @@ namespace NUnitToXUnitTests
     public class UnitTests
     {
         [Test]
-        public void TestAssertAreEqual()
+        public void TestAssertEmpty()
         {
-            Assert.AreEqual(0, 0);
+            Assert.IsEmpty("""");
         }
     }
 }";
@@ -35,19 +74,59 @@ namespace NUnitToXUnitTests
     public class UnitTests
     {
         [Fact]
-        public void TestAssertAreEqual()
+        public void TestAssertEmpty()
         {
-            Assert.Equal(0, 0);
+            Assert.Equal("""", string.Empty);
         }
     }
 }";
 
-            var expected = Verify.Diagnostic("ADNXunitConverterAnalyzer").WithLocation(7, 9).WithArguments("TestAssertAreEqual");
+            var expected = Verify.Diagnostic("ADNXunitConverterAnalyzer").WithLocation(7, 9).WithArguments("TestAssertEmpty");
             await VerifyCodeFix.VerifyFixAsync(source, fixtest, expected);
         }
 
         [TestMethod]
-        public async Task AssertAreNotEqualReplacedAssertNotEqual()
+        public async Task AssertIsNotEmptyCollectionReplacedAssertNotEmpty()
+        {
+            var source =
+@"using NUnit.Framework;
+using System.Collections.Generic;
+
+namespace NUnitToXUnitTests
+{
+    public class UnitTests
+    {
+        [Test]
+        public void TestAssertNotEmpty()
+        {
+            Assert.IsNotEmpty(new List<object>());
+        }
+    }
+}";
+
+            var fixtest =
+@"using Xunit;
+using System.Collections.Generic;
+
+namespace NUnitToXUnitTests
+{
+    public class UnitTests
+    {
+        [Fact]
+        public void TestAssertNotEmpty()
+        {
+            Assert.NotEmpty(new List<object>());
+        }
+    }
+}";
+
+
+            var expected = Verify.Diagnostic("ADNXunitConverterAnalyzer").WithLocation(8, 9).WithArguments("TestAssertNotEmpty");
+            await VerifyCodeFix.VerifyFixAsync(source, fixtest, expected);
+        }
+
+        [TestMethod]
+        public async Task AssertIsNotEmptyStringReplacedAssertNotEqual()
         {
             var source =
 @"using NUnit.Framework;
@@ -57,9 +136,9 @@ namespace NUnitToXUnitTests
     public class UnitTests
     {
         [Test]
-        public void TestAssertNotEqual()
+        public void TestAssertNotEmpty()
         {
-            Assert.AreNotEqual(0, 1);
+            Assert.IsNotEmpty("""");
         }
     }
 }";
@@ -72,92 +151,16 @@ namespace NUnitToXUnitTests
     public class UnitTests
     {
         [Fact]
-        public void TestAssertNotEqual()
+        public void TestAssertNotEmpty()
         {
-            Assert.NotEqual(0, 1);
+            Assert.NotEqual("""", string.Empty);
         }
     }
 }";
 
-            var expected = Verify.Diagnostic("ADNXunitConverterAnalyzer").WithLocation(7, 9).WithArguments("TestAssertNotEqual");
+
+            var expected = Verify.Diagnostic("ADNXunitConverterAnalyzer").WithLocation(7, 9).WithArguments("TestAssertNotEmpty");
             await VerifyCodeFix.VerifyFixAsync(source, fixtest, expected);
         }
-
-        [TestMethod]
-        public async Task AssertAreSameReplacedAssertSame()
-        {
-            var source =
-@"using NUnit.Framework;
-
-namespace NUnitToXUnitTests
-{
-    public class UnitTests
-    {
-        [Test]
-        public void TestAssertAreSame()
-        {
-            var o = new object();
-            Assert.AreSame(o, o);
-        }
-    }
-}";
-
-            var fixtest =
-@"using Xunit;
-
-namespace NUnitToXUnitTests
-{
-    public class UnitTests
-    {
-        [Fact]
-        public void TestAssertAreSame()
-        {
-            var o = new object();
-            Assert.Same(o, o);
-        }
-    }
-}";
-
-            var expected = Verify.Diagnostic("ADNXunitConverterAnalyzer").WithLocation(7, 9).WithArguments("TestAssertAreSame");
-            await VerifyCodeFix.VerifyFixAsync(source, fixtest, expected);
-        }
-
-        [TestMethod]
-        public async Task AssertAreNotSameReplacedAssertNotSame()
-        {
-            var source =
-@"using NUnit.Framework;
-
-namespace NUnitToXUnitTests
-{
-    public class UnitTests
-    {
-        [Test]
-        public void TestAssertNotSame()
-        {
-            Assert.AreNotSame(new object(), new object());
-        }
-    }
-}";
-
-            var fixtest =
-@"using Xunit;
-
-namespace NUnitToXUnitTests
-{
-    public class UnitTests
-    {
-        [Fact]
-        public void TestAssertNotSame()
-        {
-            Assert.NotSame(new object(), new object());
-        }
-    }
-}";
-
-            var expected = Verify.Diagnostic("ADNXunitConverterAnalyzer").WithLocation(7, 9).WithArguments("TestAssertNotSame");
-            await VerifyCodeFix.VerifyFixAsync(source, fixtest, expected);
-        }
-
     }
 }

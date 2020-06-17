@@ -1,4 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
+using System.Linq;
 
 namespace NXunitConverterAnalyzer
 {
@@ -22,13 +23,23 @@ namespace NXunitConverterAnalyzer
 
         public static bool IsAssertAreEqualMethod(ISymbol symbol) => IsSymbol(symbol, "AreEqual", "Assert");
 
+        public static bool IsAssertAreNotEqualMethod(ISymbol symbol) => IsSymbol(symbol, "AreNotEqual", "Assert");
+
+        public static bool IsAssertAreSameMethod(ISymbol symbol) => IsSymbol(symbol, "AreSame", "Assert");
+
+        public static bool IsAssertAreNotSameMethod(ISymbol symbol) => IsSymbol(symbol, "AreNotSame", "Assert");
+
         public static bool IsAssertIsNullMethod(ISymbol symbol) => IsSymbol(symbol, "IsNull", "Assert");
 
         public static bool IsAssertIsNotNullMethod(ISymbol symbol) => IsSymbol(symbol, "IsNotNull", "Assert");
 
+        public static bool IsAssertIsEmptyMethod(ISymbol symbol) => IsSymbol(symbol, "IsEmpty", "Assert");
+
+        public static bool IsAssertIsNotEmptyMethod(ISymbol symbol) => IsSymbol(symbol, "IsNotEmpty", "Assert");
+
         private static bool IsSymbol(ISymbol symbolsType, string name, string type, string assembly = "nunit.framework")
         {
-            return symbolsType != null 
+            return symbolsType != null
                 && symbolsType.Name == name
                 && symbolsType.OriginalDefinition.ContainingAssembly.MetadataName == assembly
                 && symbolsType.OriginalDefinition.ContainingType.Name == type;
