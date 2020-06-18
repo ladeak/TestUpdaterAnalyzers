@@ -10,7 +10,7 @@ namespace NXunitConverterAnalyzer.Test
     {
         public static async Task VerifyFixAsync(string source, string fixtest, DiagnosticResult expected)
         {
-            var fixTester = new CSharpCodeFixTest<NXunitConverterAnalyzer, ConvertNxUnitCodeFixProvider, MSTestVerifier>();
+            var fixTester = new CSharpCodeFixTest<NXunitConverterAnalyzer, NXunitConverterFixProvider, MSTestVerifier>();
             fixTester.ReferenceAssemblies = fixTester.ReferenceAssemblies.AddPackages(ImmutableArray.Create(new PackageIdentity("nunit", "3.12.0")));
             fixTester.ReferenceAssemblies = fixTester.ReferenceAssemblies.AddPackages(ImmutableArray.Create(new PackageIdentity("xunit", "2.4.1")));
             fixTester.TestCode = source;
@@ -21,7 +21,7 @@ namespace NXunitConverterAnalyzer.Test
 
         public static async Task VerifyAnalyzerAsync(string source, DiagnosticResult expected)
         {
-            var analysisTester = new CSharpCodeFixTest<NXunitConverterAnalyzer, ConvertNxUnitCodeFixProvider, MSTestVerifier>();
+            var analysisTester = new CSharpCodeFixTest<NXunitConverterAnalyzer, NXunitConverterFixProvider, MSTestVerifier>();
             analysisTester.ReferenceAssemblies = analysisTester.ReferenceAssemblies.AddPackages(ImmutableArray.Create(new PackageIdentity("nunit", "3.12.0")));
             analysisTester.TestCode = source;
             analysisTester.ExpectedDiagnostics.Add(expected);

@@ -9,8 +9,8 @@ using System.Threading.Tasks;
 
 namespace NXunitConverterAnalyzer
 {
-    [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(ConvertNxUnitCodeFixProvider)), Shared]
-    public class ConvertNxUnitCodeFixProvider : CodeFixProvider
+    [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(NXunitConverterFixProvider)), Shared]
+    public class NXunitConverterFixProvider : CodeFixProvider
     {
         private const string title = "Convert to xUnit";
 

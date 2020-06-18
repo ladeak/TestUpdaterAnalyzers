@@ -6,7 +6,7 @@ using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Verify = Microsoft.CodeAnalysis.CSharp.Testing.MSTest.CodeFixVerifier<
     NXunitConverterAnalyzer.NXunitConverterAnalyzer,
-    NXunitConverterAnalyzer.ConvertNxUnitCodeFixProvider>;
+    NXunitConverterAnalyzer.NXunitConverterFixProvider>;
 
 namespace NXunitConverterAnalyzer.Test
 {
