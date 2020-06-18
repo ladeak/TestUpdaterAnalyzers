@@ -1,6 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 
-namespace NXunitConverterAnalyzer
+namespace NXunitConverterAnalyzer.Recognizers
 {
     public static class AssertRecognizer
     {

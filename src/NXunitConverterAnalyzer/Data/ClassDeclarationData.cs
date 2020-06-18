@@ -1,7 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 
-namespace NXunitConverterAnalyzer
+namespace NXunitConverterAnalyzer.Data
 {
     public class ClassDeclarationData
     {

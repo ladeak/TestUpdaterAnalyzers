@@ -1,9 +1,11 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using NXunitConverterAnalyzer.Data;
+using NXunitConverterAnalyzer.Recognizers;
 using System;
 
-namespace NXunitConverterAnalyzer
+namespace NXunitConverterAnalyzer.Walkers
 {
     public class MethodDeclarationWalker : CSharpSyntaxWalker
     {

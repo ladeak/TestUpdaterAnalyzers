@@ -1,15 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
+using NXunitConverterAnalyzer.Data;
+using NXunitConverterAnalyzer.Recognizers;
+using NXunitConverterAnalyzer.Walkers;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
-namespace NXunitConverterAnalyzer
+namespace NXunitConverterAnalyzer.Rewriters
 {
     public class XunitRewriter : CSharpSyntaxRewriter
     {
@@ -47,7 +48,7 @@ namespace NXunitConverterAnalyzer
 
             if (AttributesRecognizer.IsTestAttribute(symbolInfo))
             {
-                var newAttributeName = (_methodDeclarationContext.Current.HasTestCase || _methodDeclarationContext.Current.HasTestCaseSourceAttribute) ? "Theory" : "Fact";
+                var newAttributeName = _methodDeclarationContext.Current.HasTestCase || _methodDeclarationContext.Current.HasTestCaseSourceAttribute ? "Theory" : "Fact";
                 return SyntaxFactory.Attribute(SyntaxFactory.IdentifierName(newAttributeName));
             }
             if (AttributesRecognizer.IsTestCaseAttribute(symbolInfo))
