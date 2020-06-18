@@ -29,15 +29,15 @@ namespace NXunitConverterAnalyzer
         {
             base.VisitAttribute(node);
             var symbolInfo = _semanticModel.GetSymbolInfo(node).Symbol;
-            if (NUnitRecognizer.IsTestCaseAttribute(symbolInfo))
+            if (AttributesRecognizer.IsTestCaseAttribute(symbolInfo))
             {
                 _methodDeclarationContext.Current.HasTestCase = true;
             }
-            if (NUnitRecognizer.IsTestAttribute(symbolInfo))
+            if (AttributesRecognizer.IsTestAttribute(symbolInfo))
             {
                 _methodDeclarationContext.Current.HasTestAttribute = true;
             }
-            if (NUnitRecognizer.IsTestCaseSourceAttribute(symbolInfo))
+            if (AttributesRecognizer.IsTestCaseSourceAttribute(symbolInfo))
             {
                 _methodDeclarationContext.Current.HasTestCaseSourceAttribute = true;
             }

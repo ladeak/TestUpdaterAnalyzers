@@ -40,9 +40,9 @@ namespace NXunitConverterAnalyzer
                 foreach (var attribute in methodSyntax.AttributeLists.SelectMany(x => x.Attributes))
                 {
                     var attributeSymbol = context.SemanticModel.GetSymbolInfo(attribute).Symbol as IMethodSymbol;
-                    if (NUnitRecognizer.IsTestAttribute(attributeSymbol)
-                        || NUnitRecognizer.IsTestCaseAttribute(attributeSymbol)
-                        || NUnitRecognizer.IsTestCaseSourceAttribute(attributeSymbol))
+                    if (AttributesRecognizer.IsTestAttribute(attributeSymbol)
+                        || AttributesRecognizer.IsTestCaseAttribute(attributeSymbol)
+                        || AttributesRecognizer.IsTestCaseSourceAttribute(attributeSymbol))
                     {
                         var diagnostic = Diagnostic.Create(Rule, methodSyntax.GetLocation(), methodSyntax.Identifier.ValueText);
                         context.ReportDiagnostic(diagnostic);

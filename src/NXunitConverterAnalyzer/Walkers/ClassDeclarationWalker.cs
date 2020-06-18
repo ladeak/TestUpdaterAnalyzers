@@ -30,7 +30,7 @@ namespace NXunitConverterAnalyzer
         {
             base.VisitAttribute(node);
             var symbolInfo = _semanticModel.GetSymbolInfo(node).Symbol;
-            if (NUnitRecognizer.IsTestCaseSourceAttribute(symbolInfo))
+            if (AttributesRecognizer.IsTestCaseSourceAttribute(symbolInfo))
             {
                 foreach (var arg in node.ArgumentList.Arguments.Select(x => x.Expression))
                 {

@@ -45,16 +45,16 @@ namespace NXunitConverterAnalyzer
             var symbolInfo = _semanticModel.GetSymbolInfo(node).Symbol;
             var newAttribute = base.VisitAttribute(node) as AttributeSyntax;
 
-            if (NUnitRecognizer.IsTestAttribute(symbolInfo))
+            if (AttributesRecognizer.IsTestAttribute(symbolInfo))
             {
                 var newAttributeName = (_methodDeclarationContext.Current.HasTestCase || _methodDeclarationContext.Current.HasTestCaseSourceAttribute) ? "Theory" : "Fact";
                 return SyntaxFactory.Attribute(SyntaxFactory.IdentifierName(newAttributeName));
             }
-            if (NUnitRecognizer.IsTestCaseAttribute(symbolInfo))
+            if (AttributesRecognizer.IsTestCaseAttribute(symbolInfo))
             {
                 return newAttribute.WithName(SyntaxFactory.IdentifierName("InlineData"));
             }
-            if (NUnitRecognizer.IsTestCaseSourceAttribute(symbolInfo) && newAttribute.ArgumentList.Arguments.Count == 1)
+            if (AttributesRecognizer.IsTestCaseSourceAttribute(symbolInfo) && newAttribute.ArgumentList.Arguments.Count == 1)
             {
                 return newAttribute.WithName(SyntaxFactory.IdentifierName("MemberData"));
             }
@@ -83,7 +83,7 @@ namespace NXunitConverterAnalyzer
             var symbolInfo = _semanticModel.GetSymbolInfo(node.Name).Symbol;
             var inner = base.VisitUsingDirective(node);
 
-            if (NUnitRecognizer.IsNUnitUsingDirective(symbolInfo))
+            if (AttributesRecognizer.IsNUnitUsingDirective(symbolInfo))
             {
                 return SyntaxFactory.UsingDirective(SyntaxFactory.IdentifierName("Xunit"));
             }
@@ -100,7 +100,7 @@ namespace NXunitConverterAnalyzer
                     && genericType.TypeArgumentList.Arguments.First() is IdentifierNameSyntax closedType)
                 {
                     var genericSymbol = _semanticModel.GetSymbolInfo(closedType).Symbol;
-                    if (!NUnitRecognizer.IsTestCaseData(genericSymbol))
+                    if (!AttributesRecognizer.IsTestCaseData(genericSymbol))
                         return newProperty;
 
                     newProperty = newProperty.WithType(genericType.WithTypeArgumentList(
@@ -128,7 +128,7 @@ namespace NXunitConverterAnalyzer
         {
             var newObjectCreation = base.VisitObjectCreationExpression(node) as ObjectCreationExpressionSyntax;
 
-            if (!NUnitRecognizer.IsTestCaseDataCtor(_semanticModel.GetSymbolInfo(newObjectCreation).Symbol))
+            if (!AttributesRecognizer.IsTestCaseDataCtor(_semanticModel.GetSymbolInfo(newObjectCreation).Symbol))
                 return newObjectCreation;
 
             var arrayExprssion = SyntaxFactory.ArrayType(
@@ -150,65 +150,84 @@ namespace NXunitConverterAnalyzer
         {
             var symbol = _semanticModel.GetSymbolInfo(node).Symbol as IMethodSymbol;
             var innerInvocation = base.VisitInvocationExpression(node) as InvocationExpressionSyntax;
+            var invocationMember = innerInvocation.Expression as MemberAccessExpressionSyntax;
 
-            if (NUnitRecognizer.IsAssertIsTrueMethod(symbol) && innerInvocation.Expression is MemberAccessExpressionSyntax isTrueMemberAccess && innerInvocation.ArgumentList.Arguments.Count < 3)
-                return innerInvocation.WithExpression(isTrueMemberAccess.WithName(SyntaxFactory.IdentifierName("True")));
+            if (AssertRecognizer.IsTrueMethod(symbol) && innerInvocation.ArgumentList.Arguments.Count < 3)
+                return innerInvocation.WithExpression(invocationMember.WithName(SyntaxFactory.IdentifierName("True")));
 
-            if (NUnitRecognizer.IsAssertIsFalseMethod(symbol) && innerInvocation.Expression is MemberAccessExpressionSyntax isFalseMemberAccess && innerInvocation.ArgumentList.Arguments.Count < 3)
-                return innerInvocation.WithExpression(isFalseMemberAccess.WithName(SyntaxFactory.IdentifierName("False")));
+            if (AssertRecognizer.IsFalseMethod(symbol) && innerInvocation.ArgumentList.Arguments.Count < 3)
+                return innerInvocation.WithExpression(invocationMember.WithName(SyntaxFactory.IdentifierName("False")));
 
-            if (NUnitRecognizer.IsAssertAreEqualMethod(symbol) && innerInvocation.Expression is MemberAccessExpressionSyntax areEqualMemberAccess && innerInvocation.ArgumentList.Arguments.Count == 2)
-                return innerInvocation.WithExpression(areEqualMemberAccess.WithName(SyntaxFactory.IdentifierName("Equal")));
+            if (AssertRecognizer.AreEqualMethod(symbol) && innerInvocation.ArgumentList.Arguments.Count == 2)
+                return innerInvocation.WithExpression(invocationMember.WithName(SyntaxFactory.IdentifierName("Equal")));
 
-            if (NUnitRecognizer.IsAssertAreNotEqualMethod(symbol) && innerInvocation.Expression is MemberAccessExpressionSyntax areNotEqualMemberAccess && innerInvocation.ArgumentList.Arguments.Count == 2)
-                return innerInvocation.WithExpression(areNotEqualMemberAccess.WithName(SyntaxFactory.IdentifierName("NotEqual")));
+            if (AssertRecognizer.AreNotEqualMethod(symbol) && innerInvocation.ArgumentList.Arguments.Count == 2)
+                return innerInvocation.WithExpression(invocationMember.WithName(SyntaxFactory.IdentifierName("NotEqual")));
 
-            if (NUnitRecognizer.IsAssertIsNullMethod(symbol) && innerInvocation.Expression is MemberAccessExpressionSyntax isNullMemberAccess && innerInvocation.ArgumentList.Arguments.Count == 1)
-                return innerInvocation.WithExpression(isNullMemberAccess.WithName(SyntaxFactory.IdentifierName("Null")));
+            if (AssertRecognizer.IsNullMethod(symbol) && innerInvocation.ArgumentList.Arguments.Count == 1)
+                return innerInvocation.WithExpression(invocationMember.WithName(SyntaxFactory.IdentifierName("Null")));
 
-            if (NUnitRecognizer.IsAssertIsNotNullMethod(symbol) && innerInvocation.Expression is MemberAccessExpressionSyntax isNotNullMemberAccess && innerInvocation.ArgumentList.Arguments.Count == 1)
-                return innerInvocation.WithExpression(isNotNullMemberAccess.WithName(SyntaxFactory.IdentifierName("NotNull")));
+            if (AssertRecognizer.IsNotNullMethod(symbol) && innerInvocation.ArgumentList.Arguments.Count == 1)
+                return innerInvocation.WithExpression(invocationMember.WithName(SyntaxFactory.IdentifierName("NotNull")));
 
-            if (NUnitRecognizer.IsAssertAreSameMethod(symbol) && innerInvocation.Expression is MemberAccessExpressionSyntax areSameMemberAccess && innerInvocation.ArgumentList.Arguments.Count == 2)
-                return innerInvocation.WithExpression(areSameMemberAccess.WithName(SyntaxFactory.IdentifierName("Same")));
+            if (AssertRecognizer.AreSameMethod(symbol) && innerInvocation.ArgumentList.Arguments.Count == 2)
+                return innerInvocation.WithExpression(invocationMember.WithName(SyntaxFactory.IdentifierName("Same")));
 
-            if (NUnitRecognizer.IsAssertAreNotSameMethod(symbol) && innerInvocation.Expression is MemberAccessExpressionSyntax areNotSameMemberAccess && innerInvocation.ArgumentList.Arguments.Count == 2)
-                return innerInvocation.WithExpression(areNotSameMemberAccess.WithName(SyntaxFactory.IdentifierName("NotSame")));
+            if (AssertRecognizer.AreNotSameMethod(symbol) && innerInvocation.ArgumentList.Arguments.Count == 2)
+                return innerInvocation.WithExpression(invocationMember.WithName(SyntaxFactory.IdentifierName("NotSame")));
 
-            if (NUnitRecognizer.IsAssertIsEmptyMethod(symbol)
-                && innerInvocation.Expression is MemberAccessExpressionSyntax isEmptyCollectionMemberAccess
+            if (AssertRecognizer.IsEmptyMethod(symbol)
                 && innerInvocation.ArgumentList.Arguments.Count == 1
                 && symbol is IMethodSymbol isEmptyMethodSymbol)
             {
                 if (NetStandardRecognizer.IsIEnumerableParameter(isEmptyMethodSymbol.Parameters.First().Type))
-                    return innerInvocation.WithExpression(isEmptyCollectionMemberAccess.WithName(SyntaxFactory.IdentifierName("Empty")));
+                    return innerInvocation.WithExpression(invocationMember.WithName(SyntaxFactory.IdentifierName("Empty")));
                 if (NetStandardRecognizer.IsStringParameter(isEmptyMethodSymbol.Parameters.First().Type))
                 {
-                    var invocation = innerInvocation.WithExpression(isEmptyCollectionMemberAccess.WithName(SyntaxFactory.IdentifierName("Equal")));
+                    var invocation = innerInvocation.WithExpression(invocationMember.WithName(SyntaxFactory.IdentifierName("Equal")));
                     invocation = invocation.WithArgumentList(invocation.ArgumentList.WithArguments(invocation.ArgumentList.Arguments.Add(
                         SyntaxFactory.Argument(GetStringEmpty()))));
                     return invocation;
                 }
             }
 
-            if (NUnitRecognizer.IsAssertIsNotEmptyMethod(symbol)
-                && innerInvocation.Expression is MemberAccessExpressionSyntax isNotEmptyCollectionMemberAccess
+            if (AssertRecognizer.IsNotEmptyMethod(symbol)
                 && innerInvocation.ArgumentList.Arguments.Count == 1
                 && symbol is IMethodSymbol isNotEmptyMethodSymbol)
             {
                 if (NetStandardRecognizer.IsIEnumerableParameter(isNotEmptyMethodSymbol.Parameters.First().Type))
-                    return innerInvocation.WithExpression(isNotEmptyCollectionMemberAccess.WithName(SyntaxFactory.IdentifierName("NotEmpty")));
+                    return innerInvocation.WithExpression(invocationMember.WithName(SyntaxFactory.IdentifierName("NotEmpty")));
                 if (NetStandardRecognizer.IsStringParameter(isNotEmptyMethodSymbol.Parameters.First().Type))
                 {
-                    var invocation = innerInvocation.WithExpression(isNotEmptyCollectionMemberAccess.WithName(SyntaxFactory.IdentifierName("NotEqual")));
+                    var invocation = innerInvocation.WithExpression(invocationMember.WithName(SyntaxFactory.IdentifierName("NotEqual")));
                     invocation = invocation.WithArgumentList(invocation.ArgumentList.WithArguments(invocation.ArgumentList.Arguments.Add(
                         SyntaxFactory.Argument(GetStringEmpty()))));
                     return invocation;
                 }
             }
 
+            if (AssertRecognizer.ZeroMethod(symbol) && innerInvocation.ArgumentList.Arguments.Count == 1)
+                return WithRenameWithFirstParamter(innerInvocation, invocationMember, "Equal", GetZero());
+
+            if (AssertRecognizer.NotZeroMethod(symbol) && innerInvocation.ArgumentList.Arguments.Count == 1)
+                return WithRenameWithFirstParamter(innerInvocation, invocationMember, "NotEqual", GetZero());
+
+            if (AssertRecognizer.PassMethod(symbol) && innerInvocation.ArgumentList.Arguments.Count < 2)
+                return WithRenameWithFirstParamter(innerInvocation, invocationMember, "True", GetTrue());
+
+            if (AssertRecognizer.FailMethod(symbol) && innerInvocation.ArgumentList.Arguments.Count < 2)
+                return WithRenameWithFirstParamter(innerInvocation, invocationMember, "True", GetFalse());
+
 
             return innerInvocation;
+        }
+
+        private InvocationExpressionSyntax WithRenameWithFirstParamter(InvocationExpressionSyntax innerInvocation, MemberAccessExpressionSyntax isAssertFailMemberAccess, string name, ExpressionSyntax argumentExpression)
+        {
+            var invocation = innerInvocation.WithExpression(isAssertFailMemberAccess.WithName(SyntaxFactory.IdentifierName(name)));
+            invocation = invocation.WithArgumentList(invocation.ArgumentList.WithArguments(invocation.ArgumentList.Arguments.Insert(0,
+                SyntaxFactory.Argument(argumentExpression))));
+            return invocation;
         }
 
         private MemberAccessExpressionSyntax GetStringEmpty()
@@ -217,6 +236,15 @@ namespace NXunitConverterAnalyzer
                 SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.StringKeyword)),
                 SyntaxFactory.IdentifierName(nameof(string.Empty)));
         }
+
+        private LiteralExpressionSyntax GetZero()
+        {
+            return SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(0));
+        }
+
+        private LiteralExpressionSyntax GetTrue() => SyntaxFactory.LiteralExpression(SyntaxKind.TrueLiteralExpression);
+
+        private LiteralExpressionSyntax GetFalse() => SyntaxFactory.LiteralExpression(SyntaxKind.FalseLiteralExpression);
 
         private MethodDeclarationData InitializeMethodDeclarationData(MethodDeclarationSyntax node)
         {

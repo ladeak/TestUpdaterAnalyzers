@@ -64,5 +64,20 @@ namespace NUnitToXUnitTests
             Assert.Empty(new List<object>());
             Assert.Equal("", string.Empty);
         }
+
+        [Fact]
+        public void TestAssertZero()
+        {
+            int actual = 0;
+            Assert.Equal(0, actual);
+            actual = 1;
+            Assert.NotEqual(0, actual);
+        }
+
+        [Fact]
+        public void TestAssertPassFail()
+        {
+            Assert.True(true);
+        }
     }
 }

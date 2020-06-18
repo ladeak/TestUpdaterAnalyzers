@@ -70,6 +70,19 @@ namespace NUnitToXUnitTests
             Assert.IsEmpty("");
         }
 
+        [Test]
+        public void TestAssertZero()
+        {
+            Assert.Zero(0);
+            Assert.NotZero(1);
+        }
+
+        [Test]
+        public void TestAssertPassFail()
+        {
+            Assert.Pass();
+        }
+
         //Assert.That
         //Assert.Contains
         //Assert.Throws
@@ -78,6 +91,5 @@ namespace NUnitToXUnitTests
         //Assert.DoesNotThrowAsync
         //Assert.IsAssignableFrom
         //Assert.IsInstanceOf
-        //Assert.Zero, Pass, Fail
     }
 }
