@@ -4,6 +4,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using NXunitConverterAnalyzer.Data;
 using NXunitConverterAnalyzer.Recognizers;
 using System;
+using System.Linq;
 
 namespace NXunitConverterAnalyzer.Walkers
 {
@@ -42,6 +43,25 @@ namespace NXunitConverterAnalyzer.Walkers
             if (AttributesRecognizer.IsTestCaseSourceAttribute(symbolInfo))
             {
                 _methodDeclarationContext.Current.HasTestCaseSourceAttribute = true;
+            }
+        }
+
+        public override void VisitInvocationExpression(InvocationExpressionSyntax node)
+        {
+            base.VisitInvocationExpression(node);
+            var symbol = _semanticModel.GetSymbolInfo(node).Symbol;
+            if (AssertRecognizer.DoesNotThrowMethod(symbol) && node.ArgumentList.Arguments.Count == 1)
+                GetInnerLambda(node, node.ArgumentList.Arguments.First().Expression);
+
+        }
+
+        private void GetInnerLambda(InvocationExpressionSyntax toBeReplaced, ExpressionSyntax expression)
+        {
+            if (expression is ParenthesizedLambdaExpressionSyntax lambda && lambda.Block != null)
+            {
+                var leadingTrivia = toBeReplaced.GetLeadingTrivia();
+                _methodDeclarationContext.Current.BlockReplace
+                    .Add(toBeReplaced, lambda.Block.Statements.Select(x => x.WithLeadingTrivia(leadingTrivia)).ToList());
             }
         }
     }

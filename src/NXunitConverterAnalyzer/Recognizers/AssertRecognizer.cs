@@ -32,6 +32,8 @@ namespace NXunitConverterAnalyzer.Recognizers
 
         public static bool FailMethod(ISymbol symbol) => IsSymbol(symbol, "Fail", "Assert");
 
+        public static bool DoesNotThrowMethod(ISymbol symbol) => IsSymbol(symbol, "DoesNotThrow", "Assert");
+
         private static bool IsSymbol(ISymbol symbolsType, string name, string type, string assembly = "nunit.framework")
         {
             return symbolsType != null

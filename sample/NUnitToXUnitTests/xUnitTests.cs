@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace NUnitToXUnitTests
@@ -78,6 +80,19 @@ namespace NUnitToXUnitTests
         public void TestAssertPassFail()
         {
             Assert.True(true);
+        }
+
+        [Fact]
+        public async Task TestAssertThrows()
+        {
+            Assert.Throws<Exception>(() => new Exception());
+            Console.WriteLine("hello");
+            new Action(() =>
+            {
+                Console.WriteLine("hello");
+            }).Invoke();
+            await Assert.ThrowsAsync<Exception>(async () => new Exception());
+            Console.WriteLine("hello");
         }
     }
 }

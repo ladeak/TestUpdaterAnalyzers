@@ -1,5 +1,7 @@
 using NUnit.Framework;
+using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace NUnitToXUnitTests
 {
@@ -81,6 +83,21 @@ namespace NUnitToXUnitTests
         public void TestAssertPassFail()
         {
             Assert.Pass();
+        }
+
+        [Test]
+        public async Task TestAssertThrows()
+        {
+            Assert.Throws<Exception>(() => new Exception());
+            Assert.DoesNotThrow(() => Console.WriteLine("hello"));
+
+            Assert.DoesNotThrow(() =>
+            {
+                Console.WriteLine("hello");
+                Console.WriteLine("world");
+            });
+            Assert.ThrowsAsync<Exception>(async () => new Exception());
+            Assert.DoesNotThrowAsync(async () => Console.WriteLine("hello"));
         }
 
         //Assert.That

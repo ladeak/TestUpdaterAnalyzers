@@ -7,6 +7,7 @@ using NXunitConverterAnalyzer.Recognizers;
 using NXunitConverterAnalyzer.Walkers;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -75,6 +76,7 @@ namespace NXunitConverterAnalyzer.Rewriters
                     var theoryAttribute = SyntaxFactory.AttributeList(SyntaxFactory.SingletonSeparatedList(SyntaxFactory.Attribute(SyntaxFactory.IdentifierName("Theory"))));
                     newDeclaration = newDeclaration.WithAttributeLists(newDeclaration.AttributeLists.Insert(0, theoryAttribute));
                 }
+                newDeclaration = ReplaceBlocks(newDeclaration);
                 return newDeclaration;
             }
         }
@@ -219,8 +221,25 @@ namespace NXunitConverterAnalyzer.Rewriters
             if (AssertRecognizer.FailMethod(symbol) && innerInvocation.ArgumentList.Arguments.Count < 2)
                 return WithRenameWithFirstParamter(innerInvocation, invocationMember, "True", GetFalse());
 
+            if (AssertRecognizer.DoesNotThrowMethod(symbol) && innerInvocation.ArgumentList.Arguments.Count == 1)
+                return GetInnerLambda(innerInvocation.ArgumentList.Arguments.First().Expression, innerInvocation);
+
 
             return innerInvocation;
+        }
+
+        private SyntaxNode GetInnerLambda(ExpressionSyntax expression, InvocationExpressionSyntax invocationExpression)
+        {
+            if (expression is ParenthesizedLambdaExpressionSyntax lambda)
+            {
+                if (lambda.ExpressionBody != null)
+                    return lambda.ExpressionBody.WithLeadingTrivia(invocationExpression.GetLeadingTrivia());
+                if (lambda.Block != null)
+                {
+                    return invocationExpression;
+                }
+            }
+            return invocationExpression;
         }
 
         private InvocationExpressionSyntax WithRenameWithFirstParamter(InvocationExpressionSyntax innerInvocation, MemberAccessExpressionSyntax isAssertFailMemberAccess, string name, ExpressionSyntax argumentExpression)
@@ -258,5 +277,23 @@ namespace NXunitConverterAnalyzer.Rewriters
             var initializer = new ClassDeclarationWalker(_semanticModel);
             return initializer.GetClassDeclarationData(node);
         }
+
+        private MethodDeclarationSyntax ReplaceBlocks(MethodDeclarationSyntax node)
+        {
+            var statements = node.Body.Statements;
+            foreach (var replacement in _methodDeclarationContext.Current.BlockReplace)
+            {
+                var removableText = replacement.Key.ToString();
+                var expressionStatementToRemove = statements.OfType<ExpressionStatementSyntax>().FirstOrDefault(x => x.Expression is InvocationExpressionSyntax && x.Expression.ToString() == removableText);
+                if (expressionStatementToRemove == null)
+                    continue;
+                var indexOfReplacement = statements.IndexOf(expressionStatementToRemove);
+                statements = statements.Remove(expressionStatementToRemove);
+                statements = statements.InsertRange(indexOfReplacement, replacement.Value);
+            }
+            node = node.WithBody(node.Body.WithStatements(statements));
+            return node;
+        }
+
     }
 }
