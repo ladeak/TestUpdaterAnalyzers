@@ -88,6 +88,7 @@ namespace NUnitToXUnitTests
         [Test]
         public async Task TestAssertThrows()
         {
+            await Task.Yield();
             Assert.Throws<Exception>(() => new Exception());
             Assert.DoesNotThrow(() => Console.WriteLine("hello"));
 
@@ -96,16 +97,12 @@ namespace NUnitToXUnitTests
                 Console.WriteLine("hello");
                 Console.WriteLine("world");
             });
-            Assert.ThrowsAsync<Exception>(async () => new Exception());
+            Assert.ThrowsAsync<Exception>(async() => new Exception());
             Assert.DoesNotThrowAsync(async () => Console.WriteLine("hello"));
         }
 
         //Assert.That
         //Assert.Contains
-        //Assert.Throws
-        //Assert.ThrowsAsync
-        //Assert.DoesNotThrow
-        //Assert.DoesNotThrowAsync
         //Assert.IsAssignableFrom
         //Assert.IsInstanceOf
     }

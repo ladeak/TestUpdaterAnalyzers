@@ -224,6 +224,12 @@ namespace NXunitConverterAnalyzer.Rewriters
             if (AssertRecognizer.DoesNotThrowMethod(symbol) && innerInvocation.ArgumentList.Arguments.Count == 1)
                 return GetInnerLambda(innerInvocation.ArgumentList.Arguments.First().Expression, innerInvocation);
 
+            if (AssertRecognizer.ThrowsAsyncMethod(symbol) && innerInvocation.ArgumentList.Arguments.Count == 1)
+                return SyntaxFactory.AwaitExpression(innerInvocation);
+
+            if (AssertRecognizer.DoesNotThrowAsyncMethod(symbol) && innerInvocation.ArgumentList.Arguments.Count == 1)
+                return GetInnerLambda(innerInvocation.ArgumentList.Arguments.First().Expression, innerInvocation);
+
 
             return innerInvocation;
         }

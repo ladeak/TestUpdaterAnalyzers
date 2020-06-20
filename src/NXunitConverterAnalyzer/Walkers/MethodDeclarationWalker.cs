@@ -53,6 +53,9 @@ namespace NXunitConverterAnalyzer.Walkers
             if (AssertRecognizer.DoesNotThrowMethod(symbol) && node.ArgumentList.Arguments.Count == 1)
                 GetInnerLambda(node, node.ArgumentList.Arguments.First().Expression);
 
+            if (AssertRecognizer.DoesNotThrowAsyncMethod(symbol) && node.ArgumentList.Arguments.Count == 1)
+                GetInnerLambda(node, node.ArgumentList.Arguments.First().Expression);
+
         }
 
         private void GetInnerLambda(InvocationExpressionSyntax toBeReplaced, ExpressionSyntax expression)
