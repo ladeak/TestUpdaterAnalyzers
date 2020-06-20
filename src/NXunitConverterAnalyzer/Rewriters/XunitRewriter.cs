@@ -233,13 +233,76 @@ namespace NXunitConverterAnalyzer.Rewriters
             if (AssertRecognizer.DoesNotThrowAsyncMethod(symbol) && innerInvocation.ArgumentList.Arguments.Count == 1)
                 return GetInnerLambda(innerInvocation.ArgumentList.Arguments.First().Expression, innerInvocation);
 
+            if (AssertRecognizer.IsInstanceOfMethod(symbol) && innerInvocation.ArgumentList.Arguments.Count == 1)
+                return RewriteInstanceOf(innerInvocation, invocationMember);
+
+            if (AssertRecognizer.IsNotInstanceOfMethod(symbol) && innerInvocation.ArgumentList.Arguments.Count == 1)
+                return RewriteNotInstanceOf(innerInvocation, invocationMember);
+
+            if (AssertRecognizer.IsAssignableFromMethod(symbol) && innerInvocation.ArgumentList.Arguments.Count == 1)
+                return RewriteIsAssignableFromMethod(innerInvocation, invocationMember, "True");
+
+            if (AssertRecognizer.IsNotAssignableFromMethod(symbol) && innerInvocation.ArgumentList.Arguments.Count == 1)
+                return RewriteIsAssignableFromMethod(innerInvocation, invocationMember, "False");
 
             return innerInvocation;
         }
 
+
+        private InvocationExpressionSyntax RewriteIsAssignableFromMethod(InvocationExpressionSyntax invocationExpression, MemberAccessExpressionSyntax invocationMember, string assertMethod)
+        {
+            if (invocationMember.Name is GenericNameSyntax genericMethod)
+            {
+                var genericType = genericMethod.TypeArgumentList.Arguments.First();
+                var argumentExpression = invocationExpression.ArgumentList.Arguments.First().Expression;
+
+                var getTypeIvocation = SyntaxFactory.InvocationExpression(SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
+                    argumentExpression, SyntaxFactory.IdentifierName("GetType")));
+
+                var isAssignableInvocation = SyntaxFactory.InvocationExpression(SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
+                    getTypeIvocation, SyntaxFactory.IdentifierName("IsAssignableFrom")),
+                    SyntaxFactory.ArgumentList(SyntaxFactory.SingletonSeparatedList(SyntaxFactory.Argument(
+                        SyntaxFactory.TypeOfExpression(genericType)))));
+
+                var newArg = SyntaxFactory.ArgumentList(SyntaxFactory.SingletonSeparatedList(SyntaxFactory.Argument(isAssignableInvocation)));
+
+                return invocationExpression
+                    .WithExpression(invocationMember.WithName(SyntaxFactory.IdentifierName(assertMethod)))
+                    .WithArgumentList(newArg);
+            }
+            return invocationExpression;
+        }
+
+        private InvocationExpressionSyntax RewriteNotInstanceOf(InvocationExpressionSyntax invocationExpression, MemberAccessExpressionSyntax invocationMember)
+        {
+            if (invocationMember.Name is GenericNameSyntax genericMethod)
+            {
+                var genericType = genericMethod.TypeArgumentList.Arguments.First();
+                var argumentExpression = invocationExpression.ArgumentList.Arguments.First().Expression;
+
+                var newArg = SyntaxFactory.ArgumentList(SyntaxFactory.SingletonSeparatedList(SyntaxFactory.Argument(
+                SyntaxFactory.BinaryExpression(SyntaxKind.IsExpression, argumentExpression, genericType))));
+
+                return invocationExpression
+                    .WithExpression(invocationMember.WithName(SyntaxFactory.IdentifierName("False")))
+                    .WithArgumentList(newArg);
+            }
+            return invocationExpression;
+        }
+
+        private InvocationExpressionSyntax RewriteInstanceOf(InvocationExpressionSyntax invocationExpression, MemberAccessExpressionSyntax invocationMember)
+        {
+            if (invocationMember.Name is GenericNameSyntax genericMethod)
+            {
+                var newGenericMethod = genericMethod.WithIdentifier(SyntaxFactory.Identifier("IsAssignableFrom"));
+                return invocationExpression.WithExpression(invocationMember.WithName(newGenericMethod));
+            }
+            return invocationExpression;
+        }
+
         private SyntaxNode WrapInAction(ExpressionSyntax expression, InvocationExpressionSyntax invocationExpression)
         {
-            var wrappedAction =  SyntaxFactory.ObjectCreationExpression(SyntaxFactory.ParseTypeName("Action"), 
+            var wrappedAction = SyntaxFactory.ObjectCreationExpression(SyntaxFactory.ParseTypeName("Action"),
                 SyntaxFactory.ArgumentList(SyntaxFactory.SingletonSeparatedList(
                     SyntaxFactory.Argument(expression))), null);
 

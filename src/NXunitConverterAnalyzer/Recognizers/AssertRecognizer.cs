@@ -40,6 +40,14 @@ namespace NXunitConverterAnalyzer.Recognizers
 
         public static bool DoesNotThrowAsyncMethod(ISymbol symbol) => IsSymbol(symbol, "DoesNotThrowAsync", "Assert");
 
+        public static bool IsInstanceOfMethod(ISymbol symbol) => IsSymbol(symbol, "IsInstanceOf", "Assert");
+
+        public static bool IsNotInstanceOfMethod(ISymbol symbol) => IsSymbol(symbol, "IsNotInstanceOf", "Assert");
+
+        public static bool IsAssignableFromMethod(ISymbol symbol) => IsSymbol(symbol, "IsAssignableFrom", "Assert");
+
+        public static bool IsNotAssignableFromMethod(ISymbol symbol) => IsSymbol(symbol, "IsNotAssignableFrom", "Assert");
+
         private static bool IsSymbol(ISymbol symbolsType, string name, string type, string assembly = "nunit.framework")
         {
             return symbolsType != null

@@ -112,7 +112,19 @@ namespace NUnitToXUnitTests
         public void TestAssertInstanceOf()
         {
             Assert.IsInstanceOf<Exception>(new ArgumentNullException());
-            Assert.IsInstanceOf(typeof(Exception), new ArgumentNullException());
+        }
+
+        [Test]
+        public void TestAssertIsNotInstanceOf()
+        {
+            Assert.IsNotInstanceOf<ArgumentNullException>(new Exception());
+        }
+
+        [Test]
+        public void TestAssertIsAssignableFrom()
+        {
+            Assert.IsAssignableFrom<ArgumentNullException>(new Exception());
+            Assert.IsNotAssignableFrom<ArgumentNullException>(new DivideByZeroException());
         }
 
         //Assert.That
