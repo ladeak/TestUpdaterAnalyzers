@@ -85,14 +85,25 @@ namespace NUnitToXUnitTests
         [Fact]
         public async Task TestAssertThrows()
         {
-            Assert.Throws<Exception>(() => new Exception());
+            Assert.Throws<Exception>(new Action(() => throw new Exception()));
+            Assert.Throws<Exception>(new Action(() => { throw new Exception(); }));
             Console.WriteLine("hello");
-            new Action(() =>
-            {
-                Console.WriteLine("hello");
-            }).Invoke();
-            await Assert.ThrowsAsync<Exception>(async () => new Exception());
+            await Assert.ThrowsAsync<Exception>(async () => throw new Exception());
+            await Assert.ThrowsAsync<Exception>(async () => { throw new Exception(); });
             Console.WriteLine("hello");
+        }
+
+        [Fact]
+        public void TestAssertContains()
+        {
+            Assert.Contains(5, new[] { 1, 3, 5, 7 });
+        }
+
+        [Fact]
+        public void TestAssertInstanceOf()
+        {
+            Assert.IsAssignableFrom<Exception>(new ArgumentNullException());
+            Assert.IsAssignableFrom(typeof(Exception), new ArgumentNullException());
         }
     }
 }

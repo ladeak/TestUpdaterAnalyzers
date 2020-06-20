@@ -221,6 +221,9 @@ namespace NXunitConverterAnalyzer.Rewriters
             if (AssertRecognizer.FailMethod(symbol) && innerInvocation.ArgumentList.Arguments.Count < 2)
                 return WithRenameWithFirstParamter(innerInvocation, invocationMember, "True", GetFalse());
 
+            if (AssertRecognizer.ThrowsMethod(symbol) && innerInvocation.ArgumentList.Arguments.Count == 1)
+                return WrapInAction(innerInvocation.ArgumentList.Arguments.First().Expression, innerInvocation);
+
             if (AssertRecognizer.DoesNotThrowMethod(symbol) && innerInvocation.ArgumentList.Arguments.Count == 1)
                 return GetInnerLambda(innerInvocation.ArgumentList.Arguments.First().Expression, innerInvocation);
 
@@ -232,6 +235,16 @@ namespace NXunitConverterAnalyzer.Rewriters
 
 
             return innerInvocation;
+        }
+
+        private SyntaxNode WrapInAction(ExpressionSyntax expression, InvocationExpressionSyntax invocationExpression)
+        {
+            var wrappedAction =  SyntaxFactory.ObjectCreationExpression(SyntaxFactory.ParseTypeName("Action"), 
+                SyntaxFactory.ArgumentList(SyntaxFactory.SingletonSeparatedList(
+                    SyntaxFactory.Argument(expression))), null);
+
+            return invocationExpression.WithArgumentList(SyntaxFactory.ArgumentList(SyntaxFactory.SingletonSeparatedList(
+                SyntaxFactory.Argument(wrappedAction))));
         }
 
         private SyntaxNode GetInnerLambda(ExpressionSyntax expression, InvocationExpressionSyntax invocationExpression)

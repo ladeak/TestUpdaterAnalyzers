@@ -23,7 +23,7 @@ namespace NUnitToXUnitTests
         [Test]
         public void TestAssertThrows()
         {
-            Assert.Throws<Exception>(() => new Exception());
+            Assert.Throws<Exception>(() => throw new Exception());
         }
     }
 }";
@@ -39,7 +39,46 @@ namespace NUnitToXUnitTests
         [Fact]
         public void TestAssertThrows()
         {
-            Assert.Throws<Exception>(() => new Exception());
+            Assert.Throws<Exception>(new Action(() => throw new Exception()));
+        }
+    }
+}";
+
+            var expected = Verify.Diagnostic("ADNXunitConverterAnalyzer").WithLocation(8, 9).WithArguments("TestAssertThrows");
+            await VerifyCodeFix.VerifyFixAsync(source, fixtest, expected);
+        }
+
+        [TestMethod]
+        public async Task AssertThrowsBlock()
+        {
+            var source =
+@"using NUnit.Framework;
+using System;
+
+namespace NUnitToXUnitTests
+{
+    public class UnitTests
+    {
+        [Test]
+        public void TestAssertThrows()
+        {
+            Assert.Throws<Exception>(() => { throw new Exception(); });
+        }
+    }
+}";
+
+            var fixtest =
+@"using Xunit;
+using System;
+
+namespace NUnitToXUnitTests
+{
+    public class UnitTests
+    {
+        [Fact]
+        public void TestAssertThrows()
+        {
+            Assert.Throws<Exception>(new Action(() => { throw new Exception(); }));
         }
     }
 }";
@@ -195,7 +234,7 @@ namespace NUnitToXUnitTests
         public async Task TestAssertThrowsAsync()
         {
             await Task.Yield();
-            Assert.ThrowsAsync<Exception>(async () => new Exception());
+            Assert.ThrowsAsync<Exception>(async () => throw new Exception());
         }
     }
 }";
@@ -213,7 +252,7 @@ namespace NUnitToXUnitTests
         public async Task TestAssertThrowsAsync()
         {
             await Task.Yield();
-            await Assert.ThrowsAsync<Exception>(async () => new Exception());
+            await Assert.ThrowsAsync<Exception>(async () => throw new Exception());
         }
     }
 }";
@@ -240,7 +279,7 @@ namespace NUnitToXUnitTests
             await Task.Yield();
             Assert.ThrowsAsync<Exception>(async () =>
             {
-                new Exception();
+                throw new Exception();
             });
         }
     }
@@ -261,7 +300,7 @@ namespace NUnitToXUnitTests
             await Task.Yield();
             await Assert.ThrowsAsync<Exception>(async () =>
             {
-                new Exception();
+                throw new Exception();
             });
         }
     }
