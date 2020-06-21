@@ -10,7 +10,7 @@ namespace NXunitConverterAnalyzer.Test
     public class AssertZeroTests
     {
         [TestMethod]
-        public async Task AssertZeroReplacedAssertEqual()
+        public async Task Zero()
         {
             var source =
 @"using NUnit.Framework;
@@ -22,7 +22,7 @@ namespace NUnitToXUnitTests
         [Test]
         public void TestAssertZero()
         {
-            Assert.Zero(0);
+            Assert.Zero(0, ""some message"");
         }
     }
 }";
@@ -47,7 +47,7 @@ namespace NUnitToXUnitTests
         }
 
         [TestMethod]
-        public async Task AssertNotZeroReplacedAssertNotEqual()
+        public async Task NotZero()
         {
             var source =
 @"using NUnit.Framework;

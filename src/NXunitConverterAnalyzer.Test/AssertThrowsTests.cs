@@ -10,7 +10,7 @@ namespace NXunitConverterAnalyzer.Test
     public class AssertThrowsTests
     {
         [TestMethod]
-        public async Task AssertThrows()
+        public async Task Throws()
         {
             var source =
 @"using NUnit.Framework;
@@ -49,7 +49,7 @@ namespace NUnitToXUnitTests
         }
 
         [TestMethod]
-        public async Task AssertThrowsBlock()
+        public async Task ThrowsBlock()
         {
             var source =
 @"using NUnit.Framework;
@@ -62,7 +62,7 @@ namespace NUnitToXUnitTests
         [Test]
         public void TestAssertThrows()
         {
-            Assert.Throws<Exception>(() => { throw new Exception(); });
+            Assert.Throws<Exception>(() => { throw new Exception(); }, ""some message"");
         }
     }
 }";
@@ -88,7 +88,7 @@ namespace NUnitToXUnitTests
         }
 
         [TestMethod]
-        public async Task AssertDoesNotThrowBlock()
+        public async Task DoesNotThrowBlock()
         {
             var source =
 @"using NUnit.Framework;
@@ -101,7 +101,7 @@ namespace NUnitToXUnitTests
         [Test]
         public void TestAssertNotThrows()
         {
-            Assert.DoesNotThrow(() => Console.WriteLine(""hello""));
+            Assert.DoesNotThrow(() => Console.WriteLine(""hello""), ""some message"");
         }
     }
 }";
@@ -127,7 +127,7 @@ namespace NUnitToXUnitTests
         }
 
         [TestMethod]
-        public async Task AssertDoesNotThrowBlockContext()
+        public async Task DoesNotThrowBlockContext()
         {
             var source =
 @"using NUnit.Framework;
@@ -144,7 +144,7 @@ namespace NUnitToXUnitTests
             {
                 Console.WriteLine(""hello"");
                 Console.WriteLine(""world"");
-            });
+            }, ""some message"");
         }
     }
 }";
@@ -171,7 +171,7 @@ namespace NUnitToXUnitTests
         }
 
         [TestMethod]
-        public async Task AssertDoesNotThrowWithContextAround()
+        public async Task DoesNotThrowWithContextAround()
         {
             var source =
 @"using NUnit.Framework;
@@ -219,7 +219,7 @@ namespace NUnitToXUnitTests
         }
 
         [TestMethod]
-        public async Task AssertThrowsAsync()
+        public async Task ThrowsAsync()
         {
             var source =
 @"using NUnit.Framework;
@@ -234,7 +234,7 @@ namespace NUnitToXUnitTests
         public async Task TestAssertThrowsAsync()
         {
             await Task.Yield();
-            Assert.ThrowsAsync<Exception>(async () => throw new Exception());
+            Assert.ThrowsAsync<Exception>(async () => throw new Exception(), ""some message"");
         }
     }
 }";
@@ -262,7 +262,7 @@ namespace NUnitToXUnitTests
         }
 
         [TestMethod]
-        public async Task AssertThrowsAsyncBlock()
+        public async Task ThrowsAsyncBlock()
         {
             var source =
 @"using NUnit.Framework;
@@ -280,7 +280,7 @@ namespace NUnitToXUnitTests
             Assert.ThrowsAsync<Exception>(async () =>
             {
                 throw new Exception();
-            });
+            }, ""some message"");
         }
     }
 }";
@@ -311,7 +311,7 @@ namespace NUnitToXUnitTests
         }
 
         [TestMethod]
-        public async Task AssertDoesNotThrowAsync()
+        public async Task DoesNotThrowAsync()
         {
             var source =
 @"using NUnit.Framework;
@@ -352,7 +352,7 @@ namespace NUnitToXUnitTests
         }
 
         [TestMethod]
-        public async Task AssertDoesNotThrowAsyncBlock()
+        public async Task DoesNotThrowAsyncBlock()
         {
             var source =
 @"using NUnit.Framework;

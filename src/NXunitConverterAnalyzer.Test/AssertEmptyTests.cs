@@ -10,7 +10,7 @@ namespace NXunitConverterAnalyzer.Test
     public class AssertEmptyTests
     {
         [TestMethod]
-        public async Task AssertIsEmptyCollectionReplacedAssertEmpty()
+        public async Task IsEmptyCollection()
         {
             var source =
 @"using NUnit.Framework;
@@ -23,7 +23,7 @@ namespace NUnitToXUnitTests
         [Test]
         public void TestAssertEmpty()
         {
-            Assert.IsEmpty(new List<object>());
+            Assert.IsEmpty(new List<object>(), ""some message"", ""param"");
         }
     }
 }";
@@ -49,7 +49,7 @@ namespace NUnitToXUnitTests
         }
 
         [TestMethod]
-        public async Task AssertIsEmptyStringReplacedAssertEqual()
+        public async Task IsEmptyString()
         {
             var source =
 @"using NUnit.Framework;
@@ -76,7 +76,7 @@ namespace NUnitToXUnitTests
         [Fact]
         public void TestAssertEmpty()
         {
-            Assert.Equal("""", string.Empty);
+            Assert.Equal(string.Empty, """");
         }
     }
 }";
@@ -86,7 +86,7 @@ namespace NUnitToXUnitTests
         }
 
         [TestMethod]
-        public async Task AssertIsNotEmptyCollectionReplacedAssertNotEmpty()
+        public async Task IsNotEmptyCollection()
         {
             var source =
 @"using NUnit.Framework;
@@ -126,7 +126,7 @@ namespace NUnitToXUnitTests
         }
 
         [TestMethod]
-        public async Task AssertIsNotEmptyStringReplacedAssertNotEqual()
+        public async Task IsNotEmptyString()
         {
             var source =
 @"using NUnit.Framework;
@@ -138,7 +138,7 @@ namespace NUnitToXUnitTests
         [Test]
         public void TestAssertNotEmpty()
         {
-            Assert.IsNotEmpty("""");
+            Assert.IsNotEmpty("""", ""some message"", ""param"");
         }
     }
 }";
@@ -153,7 +153,7 @@ namespace NUnitToXUnitTests
         [Fact]
         public void TestAssertNotEmpty()
         {
-            Assert.NotEqual("""", string.Empty);
+            Assert.NotEqual(string.Empty, """");
         }
     }
 }";

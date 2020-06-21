@@ -10,7 +10,7 @@ namespace NXunitConverterAnalyzer.Test
     public class AssertNullTests
     {
         [TestMethod]
-        public async Task AssertIsNullReplacedAssertNull()
+        public async Task IsNull()
         {
             var source =
 @"using NUnit.Framework;
@@ -22,7 +22,7 @@ namespace NUnitToXUnitTests
         [Test]
         public void TestAssertNull()
         {
-            Assert.IsNull(null);
+            Assert.IsNull(null, ""some message"");
         }
     }
 }";
@@ -47,7 +47,7 @@ namespace NUnitToXUnitTests
         }
 
         [TestMethod]
-        public async Task AssertNullReplacedAssertNull()
+        public async Task Null()
         {
             var source =
 @"using NUnit.Framework;
@@ -59,7 +59,7 @@ namespace NUnitToXUnitTests
         [Test]
         public void TestAssertNull()
         {
-            Assert.Null(null);
+            Assert.Null(null, ""some message"");
         }
     }
 }";
@@ -84,7 +84,7 @@ namespace NUnitToXUnitTests
         }
 
         [TestMethod]
-        public async Task AssertIsNotNullReplacedAssertNotNull()
+        public async Task IsNotNull()
         {
             var source =
 @"using NUnit.Framework;
@@ -96,7 +96,7 @@ namespace NUnitToXUnitTests
         [Test]
         public void TestAssertNull()
         {
-            Assert.IsNotNull(new object());
+            Assert.IsNotNull(new object(), ""some message"");
         }
     }
 }";
@@ -121,7 +121,7 @@ namespace NUnitToXUnitTests
         }
 
         [TestMethod]
-        public async Task AssertNotNullReplacedAssertNotNull()
+        public async Task NotNull()
         {
             var source =
 @"using NUnit.Framework;
@@ -133,7 +133,7 @@ namespace NUnitToXUnitTests
         [Test]
         public void TestAssertNull()
         {
-            Assert.NotNull(new object());
+            Assert.NotNull(new object(), ""some message"");
         }
     }
 }";

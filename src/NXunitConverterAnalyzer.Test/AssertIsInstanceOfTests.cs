@@ -23,7 +23,7 @@ namespace NUnitToXUnitTests
         [Test]
         public void TestAssertIsInstanceOf()
         {
-            Assert.IsInstanceOf<Exception>(new ArgumentNullException());
+            Assert.IsInstanceOf<Exception>(new ArgumentNullException(), ""some message"");
         }
     }
 }";
@@ -101,7 +101,7 @@ namespace NUnitToXUnitTests
         [Test]
         public void TestAssertIsAssignableFrom()
         {
-            Assert.IsAssignableFrom<ArgumentNullException>(new Exception());
+            Assert.IsAssignableFrom<ArgumentNullException>(new Exception(), ""some message"");
         }
     }
 }";

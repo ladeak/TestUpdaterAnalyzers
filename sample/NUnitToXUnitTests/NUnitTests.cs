@@ -91,7 +91,6 @@ namespace NUnitToXUnitTests
             await Task.Yield();
             Assert.Throws<Exception>(() => throw new Exception());
             Assert.DoesNotThrow(() => Console.WriteLine("hello"));
-
             Assert.DoesNotThrow(() =>
             {
                 Console.WriteLine("hello");
@@ -127,6 +126,10 @@ namespace NUnitToXUnitTests
             Assert.IsNotAssignableFrom<ArgumentNullException>(new DivideByZeroException());
         }
 
-        //Assert.That
+        [Test]
+        public void TestAssertThat()
+        {
+            Assert.That(5, Is.EqualTo(5));
+        }
     }
 }

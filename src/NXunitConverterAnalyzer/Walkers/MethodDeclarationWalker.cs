@@ -50,10 +50,10 @@ namespace NXunitConverterAnalyzer.Walkers
         {
             base.VisitInvocationExpression(node);
             var symbol = _semanticModel.GetSymbolInfo(node).Symbol;
-            if (AssertRecognizer.DoesNotThrowMethod(symbol) && node.ArgumentList.Arguments.Count == 1)
+            if (AssertRecognizer.DoesNotThrowMethod(symbol))
                 GetInnerLambda(node, node.ArgumentList.Arguments.First().Expression);
 
-            if (AssertRecognizer.DoesNotThrowAsyncMethod(symbol) && node.ArgumentList.Arguments.Count == 1)
+            if (AssertRecognizer.DoesNotThrowAsyncMethod(symbol))
                 GetInnerLambda(node, node.ArgumentList.Arguments.First().Expression);
 
         }

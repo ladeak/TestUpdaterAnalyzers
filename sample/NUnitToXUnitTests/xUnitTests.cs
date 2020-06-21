@@ -119,5 +119,11 @@ namespace NUnitToXUnitTests
             Assert.False(new DivideByZeroException().GetType().IsAssignableFrom(typeof(ArgumentNullException)));
         }
 
+        [Fact]
+        public void TestAssertThat()
+        { 
+        
+        }
+
     }
 }

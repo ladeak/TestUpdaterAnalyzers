@@ -10,7 +10,7 @@ namespace NXunitConverterAnalyzer.Test
     public class AssertEqualTests
     {
         [TestMethod]
-        public async Task AssertAreEqualReplacedAssertEqual()
+        public async Task AreEqual()
         {
             var source =
 @"using NUnit.Framework;
@@ -47,7 +47,7 @@ namespace NUnitToXUnitTests
         }
 
         [TestMethod]
-        public async Task AssertAreNotEqualReplacedAssertNotEqual()
+        public async Task AreNotEqual()
         {
             var source =
 @"using NUnit.Framework;
@@ -84,7 +84,7 @@ namespace NUnitToXUnitTests
         }
 
         [TestMethod]
-        public async Task AssertAreSameReplacedAssertSame()
+        public async Task AreSame()
         {
             var source =
 @"using NUnit.Framework;
@@ -97,7 +97,7 @@ namespace NUnitToXUnitTests
         public void TestAssertAreSame()
         {
             var o = new object();
-            Assert.AreSame(o, o);
+            Assert.AreSame(o, o, ""some message"", ""param"");
         }
     }
 }";
@@ -123,7 +123,7 @@ namespace NUnitToXUnitTests
         }
 
         [TestMethod]
-        public async Task AssertAreNotSameReplacedAssertNotSame()
+        public async Task AreNotSameReplaced()
         {
             var source =
 @"using NUnit.Framework;
@@ -135,7 +135,7 @@ namespace NUnitToXUnitTests
         [Test]
         public void TestAssertNotSame()
         {
-            Assert.AreNotSame(new object(), new object());
+            Assert.AreNotSame(new object(), new object(), ""some message"", ""param"");
         }
     }
 }";

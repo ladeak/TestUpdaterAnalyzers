@@ -10,7 +10,7 @@ namespace NXunitConverterAnalyzer.Test
     public class AssertPassFailTests
     {
         [TestMethod]
-        public async Task AssertPassReplacedAssertTrue()
+        public async Task Pass()
         {
             var source =
 @"using NUnit.Framework;
@@ -47,7 +47,7 @@ namespace NUnitToXUnitTests
         }
 
         [TestMethod]
-        public async Task AssertFailReplacedAssertTrue()
+        public async Task Fail()
         {
             var source =
 @"using NUnit.Framework;

@@ -155,11 +155,15 @@ namespace NXunitConverterAnalyzer.Rewriters
             var innerInvocation = base.VisitInvocationExpression(node) as InvocationExpressionSyntax;
             var invocationMember = innerInvocation.Expression as MemberAccessExpressionSyntax;
 
-            if (AssertRecognizer.IsTrueMethod(symbol) && innerInvocation.ArgumentList.Arguments.Count < 3)
-                return innerInvocation.WithExpression(invocationMember.WithName(SyntaxFactory.IdentifierName("True")));
+            if (AssertRecognizer.IsTrueMethod(symbol) || AssertRecognizer.TrueMethod(symbol))
+                return innerInvocation
+                    .WithExpression(invocationMember.WithName(SyntaxFactory.IdentifierName("True")))
+                    .WithArgumentList(CutArgs(innerInvocation.ArgumentList, 2));
 
-            if (AssertRecognizer.IsFalseMethod(symbol) && innerInvocation.ArgumentList.Arguments.Count < 3)
-                return innerInvocation.WithExpression(invocationMember.WithName(SyntaxFactory.IdentifierName("False")));
+            if (AssertRecognizer.IsFalseMethod(symbol) || AssertRecognizer.FalseMethod(symbol))
+                return innerInvocation
+                    .WithExpression(invocationMember.WithName(SyntaxFactory.IdentifierName("False")))
+                    .WithArgumentList(CutArgs(innerInvocation.ArgumentList, 2));
 
             if (AssertRecognizer.AreEqualMethod(symbol) && innerInvocation.ArgumentList.Arguments.Count == 2)
                 return innerInvocation.WithExpression(invocationMember.WithName(SyntaxFactory.IdentifierName("Equal")));
@@ -167,87 +171,118 @@ namespace NXunitConverterAnalyzer.Rewriters
             if (AssertRecognizer.AreNotEqualMethod(symbol) && innerInvocation.ArgumentList.Arguments.Count == 2)
                 return innerInvocation.WithExpression(invocationMember.WithName(SyntaxFactory.IdentifierName("NotEqual")));
 
-            if (AssertRecognizer.IsNullMethod(symbol) && innerInvocation.ArgumentList.Arguments.Count == 1)
-                return innerInvocation.WithExpression(invocationMember.WithName(SyntaxFactory.IdentifierName("Null")));
+            if (AssertRecognizer.IsNullMethod(symbol))
+                return innerInvocation
+                    .WithExpression(invocationMember.WithName(SyntaxFactory.IdentifierName("Null")))
+                    .WithArgumentList(CutArgs(innerInvocation.ArgumentList, 1));
 
-            if (AssertRecognizer.IsNotNullMethod(symbol) && innerInvocation.ArgumentList.Arguments.Count == 1)
-                return innerInvocation.WithExpression(invocationMember.WithName(SyntaxFactory.IdentifierName("NotNull")));
+            if (AssertRecognizer.IsNotNullMethod(symbol))
+                return innerInvocation
+                    .WithExpression(invocationMember.WithName(SyntaxFactory.IdentifierName("NotNull")))
+                    .WithArgumentList(CutArgs(innerInvocation.ArgumentList, 1));
 
-            if (AssertRecognizer.AreSameMethod(symbol) && innerInvocation.ArgumentList.Arguments.Count == 2)
-                return innerInvocation.WithExpression(invocationMember.WithName(SyntaxFactory.IdentifierName("Same")));
+            if (AssertRecognizer.NullMethod(symbol))
+                return innerInvocation
+                    .WithArgumentList(CutArgs(innerInvocation.ArgumentList, 1));
 
-            if (AssertRecognizer.AreNotSameMethod(symbol) && innerInvocation.ArgumentList.Arguments.Count == 2)
-                return innerInvocation.WithExpression(invocationMember.WithName(SyntaxFactory.IdentifierName("NotSame")));
+            if (AssertRecognizer.NotNullMethod(symbol))
+                return innerInvocation
+                    .WithArgumentList(CutArgs(innerInvocation.ArgumentList, 1));
 
-            if (AssertRecognizer.IsEmptyMethod(symbol)
-                && innerInvocation.ArgumentList.Arguments.Count == 1
-                && symbol is IMethodSymbol isEmptyMethodSymbol)
+            if (AssertRecognizer.AreSameMethod(symbol))
+                return innerInvocation
+                    .WithExpression(invocationMember.WithName(SyntaxFactory.IdentifierName("Same")))
+                    .WithArgumentList(CutArgs(innerInvocation.ArgumentList, 2));
+
+            if (AssertRecognizer.AreNotSameMethod(symbol))
+                return innerInvocation
+                    .WithExpression(invocationMember.WithName(SyntaxFactory.IdentifierName("NotSame")))
+                    .WithArgumentList(CutArgs(innerInvocation.ArgumentList, 2));
+
+            if (AssertRecognizer.IsEmptyMethod(symbol) && symbol is IMethodSymbol isEmptyMethodSymbol)
             {
                 if (NetStandardRecognizer.IsIEnumerableParameter(isEmptyMethodSymbol.Parameters.First().Type))
-                    return innerInvocation.WithExpression(invocationMember.WithName(SyntaxFactory.IdentifierName("Empty")));
+                    return innerInvocation
+                        .WithExpression(invocationMember.WithName(SyntaxFactory.IdentifierName("Empty")))
+                        .WithArgumentList(CutArgs(innerInvocation.ArgumentList, 1));
+
                 if (NetStandardRecognizer.IsStringParameter(isEmptyMethodSymbol.Parameters.First().Type))
                 {
-                    var invocation = innerInvocation.WithExpression(invocationMember.WithName(SyntaxFactory.IdentifierName("Equal")));
-                    invocation = invocation.WithArgumentList(invocation.ArgumentList.WithArguments(invocation.ArgumentList.Arguments.Add(
-                        SyntaxFactory.Argument(GetStringEmpty()))));
+                    var args = CutArgs(innerInvocation.ArgumentList, 1).Arguments
+                        .Insert(0, SyntaxFactory.Argument(GetStringEmpty()));
+
+                    var invocation = innerInvocation
+                        .WithExpression(invocationMember.WithName(SyntaxFactory.IdentifierName("Equal")))
+                        .WithArgumentList(SyntaxFactory.ArgumentList(args));
                     return invocation;
                 }
             }
 
-            if (AssertRecognizer.IsNotEmptyMethod(symbol)
-                && innerInvocation.ArgumentList.Arguments.Count == 1
-                && symbol is IMethodSymbol isNotEmptyMethodSymbol)
+            if (AssertRecognizer.IsNotEmptyMethod(symbol) && symbol is IMethodSymbol isNotEmptyMethodSymbol)
             {
                 if (NetStandardRecognizer.IsIEnumerableParameter(isNotEmptyMethodSymbol.Parameters.First().Type))
-                    return innerInvocation.WithExpression(invocationMember.WithName(SyntaxFactory.IdentifierName("NotEmpty")));
+                    return innerInvocation
+                        .WithExpression(invocationMember.WithName(SyntaxFactory.IdentifierName("NotEmpty")))
+                        .WithArgumentList(CutArgs(innerInvocation.ArgumentList, 1));
+
                 if (NetStandardRecognizer.IsStringParameter(isNotEmptyMethodSymbol.Parameters.First().Type))
                 {
-                    var invocation = innerInvocation.WithExpression(invocationMember.WithName(SyntaxFactory.IdentifierName("NotEqual")));
-                    invocation = invocation.WithArgumentList(invocation.ArgumentList.WithArguments(invocation.ArgumentList.Arguments.Add(
-                        SyntaxFactory.Argument(GetStringEmpty()))));
+                    var args = CutArgs(innerInvocation.ArgumentList, 1).Arguments
+                        .Insert(0, SyntaxFactory.Argument(GetStringEmpty()));
+
+                    var invocation = innerInvocation
+                        .WithExpression(invocationMember.WithName(SyntaxFactory.IdentifierName("NotEqual")))
+                        .WithArgumentList(SyntaxFactory.ArgumentList(args));
                     return invocation;
                 }
             }
 
-            if (AssertRecognizer.ZeroMethod(symbol) && innerInvocation.ArgumentList.Arguments.Count == 1)
+            if (AssertRecognizer.ContainsMethod(symbol))
+                return innerInvocation
+                    .WithArgumentList(CutArgs(innerInvocation.ArgumentList, 2));
+
+            if (AssertRecognizer.ZeroMethod(symbol))
                 return WithRenameWithFirstParamter(innerInvocation, invocationMember, "Equal", GetZero());
 
-            if (AssertRecognizer.NotZeroMethod(symbol) && innerInvocation.ArgumentList.Arguments.Count == 1)
+            if (AssertRecognizer.NotZeroMethod(symbol))
                 return WithRenameWithFirstParamter(innerInvocation, invocationMember, "NotEqual", GetZero());
 
-            if (AssertRecognizer.PassMethod(symbol) && innerInvocation.ArgumentList.Arguments.Count < 2)
+            if (AssertRecognizer.PassMethod(symbol))
                 return WithRenameWithFirstParamter(innerInvocation, invocationMember, "True", GetTrue());
 
-            if (AssertRecognizer.FailMethod(symbol) && innerInvocation.ArgumentList.Arguments.Count < 2)
+            if (AssertRecognizer.FailMethod(symbol))
                 return WithRenameWithFirstParamter(innerInvocation, invocationMember, "True", GetFalse());
 
-            if (AssertRecognizer.ThrowsMethod(symbol) && innerInvocation.ArgumentList.Arguments.Count == 1)
+            if (AssertRecognizer.ThrowsMethod(symbol))
                 return WrapInAction(innerInvocation.ArgumentList.Arguments.First().Expression, innerInvocation);
 
-            if (AssertRecognizer.DoesNotThrowMethod(symbol) && innerInvocation.ArgumentList.Arguments.Count == 1)
+            if (AssertRecognizer.DoesNotThrowMethod(symbol))
                 return GetInnerLambda(innerInvocation.ArgumentList.Arguments.First().Expression, innerInvocation);
 
-            if (AssertRecognizer.ThrowsAsyncMethod(symbol) && innerInvocation.ArgumentList.Arguments.Count == 1)
-                return SyntaxFactory.AwaitExpression(innerInvocation);
+            if (AssertRecognizer.ThrowsAsyncMethod(symbol))
+                return SyntaxFactory.AwaitExpression(innerInvocation.WithArgumentList(CutArgs(innerInvocation.ArgumentList, 1)));
 
-            if (AssertRecognizer.DoesNotThrowAsyncMethod(symbol) && innerInvocation.ArgumentList.Arguments.Count == 1)
+            if (AssertRecognizer.DoesNotThrowAsyncMethod(symbol))
                 return GetInnerLambda(innerInvocation.ArgumentList.Arguments.First().Expression, innerInvocation);
 
-            if (AssertRecognizer.IsInstanceOfMethod(symbol) && innerInvocation.ArgumentList.Arguments.Count == 1)
+            if (AssertRecognizer.IsInstanceOfMethod(symbol))
                 return RewriteInstanceOf(innerInvocation, invocationMember);
 
-            if (AssertRecognizer.IsNotInstanceOfMethod(symbol) && innerInvocation.ArgumentList.Arguments.Count == 1)
+            if (AssertRecognizer.IsNotInstanceOfMethod(symbol))
                 return RewriteNotInstanceOf(innerInvocation, invocationMember);
 
-            if (AssertRecognizer.IsAssignableFromMethod(symbol) && innerInvocation.ArgumentList.Arguments.Count == 1)
+            if (AssertRecognizer.IsAssignableFromMethod(symbol))
                 return RewriteIsAssignableFromMethod(innerInvocation, invocationMember, "True");
 
-            if (AssertRecognizer.IsNotAssignableFromMethod(symbol) && innerInvocation.ArgumentList.Arguments.Count == 1)
+            if (AssertRecognizer.IsNotAssignableFromMethod(symbol))
                 return RewriteIsAssignableFromMethod(innerInvocation, invocationMember, "False");
 
             return innerInvocation;
         }
 
+
+        private ArgumentListSyntax CutArgs(ArgumentListSyntax args, int take) =>
+            SyntaxFactory.ArgumentList(SyntaxFactory.SeparatedList(args.Arguments.Take(take)));
 
         private InvocationExpressionSyntax RewriteIsAssignableFromMethod(InvocationExpressionSyntax invocationExpression, MemberAccessExpressionSyntax invocationMember, string assertMethod)
         {
@@ -295,7 +330,9 @@ namespace NXunitConverterAnalyzer.Rewriters
             if (invocationMember.Name is GenericNameSyntax genericMethod)
             {
                 var newGenericMethod = genericMethod.WithIdentifier(SyntaxFactory.Identifier("IsAssignableFrom"));
-                return invocationExpression.WithExpression(invocationMember.WithName(newGenericMethod));
+                return invocationExpression
+                    .WithExpression(invocationMember.WithName(newGenericMethod))
+                    .WithArgumentList(CutArgs(invocationExpression.ArgumentList, 1));
             }
             return invocationExpression;
         }
@@ -306,8 +343,8 @@ namespace NXunitConverterAnalyzer.Rewriters
                 SyntaxFactory.ArgumentList(SyntaxFactory.SingletonSeparatedList(
                     SyntaxFactory.Argument(expression))), null);
 
-            return invocationExpression.WithArgumentList(SyntaxFactory.ArgumentList(SyntaxFactory.SingletonSeparatedList(
-                SyntaxFactory.Argument(wrappedAction))));
+            return invocationExpression
+                .WithArgumentList(SyntaxFactory.ArgumentList(SyntaxFactory.SingletonSeparatedList(SyntaxFactory.Argument(wrappedAction))));
         }
 
         private SyntaxNode GetInnerLambda(ExpressionSyntax expression, InvocationExpressionSyntax invocationExpression)
@@ -326,9 +363,12 @@ namespace NXunitConverterAnalyzer.Rewriters
 
         private InvocationExpressionSyntax WithRenameWithFirstParamter(InvocationExpressionSyntax innerInvocation, MemberAccessExpressionSyntax isAssertFailMemberAccess, string name, ExpressionSyntax argumentExpression)
         {
-            var invocation = innerInvocation.WithExpression(isAssertFailMemberAccess.WithName(SyntaxFactory.IdentifierName(name)));
-            invocation = invocation.WithArgumentList(invocation.ArgumentList.WithArguments(invocation.ArgumentList.Arguments.Insert(0,
-                SyntaxFactory.Argument(argumentExpression))));
+            var args = CutArgs(innerInvocation.ArgumentList, 1).Arguments
+                .Insert(0, SyntaxFactory.Argument(argumentExpression));
+
+            var invocation = innerInvocation
+                .WithExpression(isAssertFailMemberAccess.WithName(SyntaxFactory.IdentifierName(name)))
+                .WithArgumentList(SyntaxFactory.ArgumentList(args));
             return invocation;
         }
 
