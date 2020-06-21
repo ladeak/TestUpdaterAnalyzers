@@ -8,6 +8,8 @@ namespace NXunitConverterAnalyzer.Recognizers
 
         public static bool IsStringParameter(ITypeSymbol symbol) => IsType(symbol, "String", null);
 
+        public static bool IsFuncParameter(ITypeSymbol symbol) => IsType(symbol, "Func", null);
+
         private static bool IsType(ITypeSymbol symbolsType, string name, string type, string assembly = "netstandard")
         {
             return symbolsType != null

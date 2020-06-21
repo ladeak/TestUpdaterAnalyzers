@@ -58,6 +58,10 @@ namespace NXunitConverterAnalyzer.Recognizers
 
         public static bool IsNotAssignableFromMethod(IMethodSymbol symbol) => IsSymbol(symbol, "IsNotAssignableFrom", "Assert") && symbol.IsGenericMethod;
 
+        public static bool ThatNotGenericMethod(IMethodSymbol symbol) => IsSymbol(symbol, "That", "Assert") && !symbol.IsGenericMethod;
+
+        public static bool ThatMethod(IMethodSymbol symbol) => IsSymbol(symbol, "That", "Assert") && symbol.IsGenericMethod;
+
         private static bool IsSymbol(ISymbol symbolsType, string name, string type, string assembly = "nunit.framework")
         {
             return symbolsType != null

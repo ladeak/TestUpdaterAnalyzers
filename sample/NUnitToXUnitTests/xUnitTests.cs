@@ -121,8 +121,10 @@ namespace NUnitToXUnitTests
 
         [Fact]
         public void TestAssertThat()
-        { 
-        
+        {
+            Assert.True(new Func<bool>(() => true).Invoke());
+            Assert.Throws<Exception>(new Action(() => throw new Exception()));
+            Assert.IsType<int>(new Func<Int32>(() => 5).Invoke());
         }
 
     }

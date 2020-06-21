@@ -5,7 +5,9 @@ using Microsoft.CodeAnalysis.Text;
 using NXunitConverterAnalyzer.Data;
 using NXunitConverterAnalyzer.Recognizers;
 using NXunitConverterAnalyzer.Walkers;
+using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
@@ -277,12 +279,64 @@ namespace NXunitConverterAnalyzer.Rewriters
             if (AssertRecognizer.IsNotAssignableFromMethod(symbol))
                 return RewriteIsAssignableFromMethod(innerInvocation, invocationMember, "False");
 
+            if (AssertRecognizer.ThatNotGenericMethod(symbol))
+                return RewriteNonGenericThat(innerInvocation, invocationMember, symbol);
+
+            if (AssertRecognizer.ThatMethod(symbol))
+                return RewriteThat(innerInvocation);
+
             return innerInvocation;
         }
 
-
         private ArgumentListSyntax CutArgs(ArgumentListSyntax args, int take) =>
             SyntaxFactory.ArgumentList(SyntaxFactory.SeparatedList(args.Arguments.Take(take)));
+
+        private SyntaxNode RewriteNonGenericThat(InvocationExpressionSyntax invocationExpression, MemberAccessExpressionSyntax invocationMember, IMethodSymbol symbol)
+        {
+            var isResolve = symbol.Parameters.FirstOrDefault(x => ResolveRecognizer.ResolveConstraint(x.Type));
+            var isFunc = NetStandardRecognizer.IsFuncParameter(symbol.Parameters.First().Type);
+
+            if (isResolve != null)
+            {
+                var isResolveIndex = symbol.Parameters.IndexOf(isResolve);
+                var isConstraintSymbol = _semanticModel.GetSymbolInfo(invocationExpression.ArgumentList.Arguments[isResolveIndex].Expression).Symbol as IMethodSymbol;
+                if (isResolveIndex < 0 || !ResolveRecognizer.TypeOfMethod(isConstraintSymbol))
+                    return invocationExpression;
+                var genericTypeArgName = isConstraintSymbol.TypeArguments.Select(x => x.Name).First();
+                var throwsGenericName = SyntaxFactory.GenericName(SyntaxFactory.Identifier("Throws"), SyntaxFactory.TypeArgumentList(SyntaxFactory.SingletonSeparatedList(SyntaxFactory.ParseTypeName(genericTypeArgName))));
+                return WrapInAction(invocationExpression.ArgumentList.Arguments.First().Expression, invocationExpression)
+                    .WithExpression(invocationMember.WithName(throwsGenericName));
+
+            }
+            if (isFunc && symbol.Parameters.First().Type is INamedTypeSymbol typeSymbol)
+            {
+                var genericTypeArgs = typeSymbol.TypeArguments.Select(x => x.Name);
+                return WrapInFunc(invocationExpression.ArgumentList.Arguments.First().Expression, invocationExpression, genericTypeArgs, true)
+                    .WithExpression(invocationMember.WithName(SyntaxFactory.IdentifierName("True")));
+            }
+            else
+                return invocationExpression
+                    .WithExpression(invocationMember.WithName(SyntaxFactory.IdentifierName("True")))
+                    .WithArgumentList(CutArgs(invocationExpression.ArgumentList, 1));
+        }
+
+        private InvocationExpressionSyntax RewriteThat(InvocationExpressionSyntax invocationExpression)
+        {
+            var assertData = new AssertThatWalker(_semanticModel).GetAssertThatData(invocationExpression);
+            if (assertData == null)
+                return invocationExpression;
+
+            var arguments = SyntaxFactory.ArgumentList(SyntaxFactory.SeparatedList(assertData.Arguments));
+            SimpleNameSyntax methodName;
+            if (assertData.AssertMethodTypeArgument != null)
+                methodName = SyntaxFactory.GenericName(SyntaxFactory.Identifier(assertData.AssertMethod), SyntaxFactory.TypeArgumentList(SyntaxFactory.SingletonSeparatedList(SyntaxFactory.ParseTypeName(assertData.AssertMethodTypeArgument))));
+            else
+                methodName = SyntaxFactory.IdentifierName(assertData.AssertMethod);
+
+            return invocationExpression
+                .WithExpression(assertData.InvocationMember.WithName(methodName))
+                .WithArgumentList(arguments);
+        }
 
         private InvocationExpressionSyntax RewriteIsAssignableFromMethod(InvocationExpressionSyntax invocationExpression, MemberAccessExpressionSyntax invocationMember, string assertMethod)
         {
@@ -337,11 +391,31 @@ namespace NXunitConverterAnalyzer.Rewriters
             return invocationExpression;
         }
 
-        private SyntaxNode WrapInAction(ExpressionSyntax expression, InvocationExpressionSyntax invocationExpression)
+        private InvocationExpressionSyntax WrapInAction(ExpressionSyntax expression, InvocationExpressionSyntax invocationExpression, bool invoceAction = false)
         {
-            var wrappedAction = SyntaxFactory.ObjectCreationExpression(SyntaxFactory.ParseTypeName("Action"),
+            ExpressionSyntax wrappedAction = SyntaxFactory.ObjectCreationExpression(SyntaxFactory.ParseTypeName("Action"),
                 SyntaxFactory.ArgumentList(SyntaxFactory.SingletonSeparatedList(
                     SyntaxFactory.Argument(expression))), null);
+
+            if (invoceAction)
+                wrappedAction = SyntaxFactory.InvocationExpression(SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
+                    wrappedAction, SyntaxFactory.IdentifierName("Invoke")));
+
+            return invocationExpression
+                .WithArgumentList(SyntaxFactory.ArgumentList(SyntaxFactory.SingletonSeparatedList(SyntaxFactory.Argument(wrappedAction))));
+        }
+
+        private InvocationExpressionSyntax WrapInFunc(ExpressionSyntax expression, InvocationExpressionSyntax invocationExpression, IEnumerable<string> genericTypes, bool invoceAction = false)
+        {
+            ExpressionSyntax wrappedAction = SyntaxFactory.ObjectCreationExpression(
+                SyntaxFactory.GenericName(SyntaxFactory.Identifier("Func"),
+                    SyntaxFactory.TypeArgumentList(SyntaxFactory.SeparatedList(genericTypes.Select(x => SyntaxFactory.ParseTypeName(x))))),
+                SyntaxFactory.ArgumentList(SyntaxFactory.SingletonSeparatedList(
+                    SyntaxFactory.Argument(expression))), null);
+
+            if (invoceAction)
+                wrappedAction = SyntaxFactory.InvocationExpression(SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
+                    wrappedAction, SyntaxFactory.IdentifierName("Invoke")));
 
             return invocationExpression
                 .WithArgumentList(SyntaxFactory.ArgumentList(SyntaxFactory.SingletonSeparatedList(SyntaxFactory.Argument(wrappedAction))));
