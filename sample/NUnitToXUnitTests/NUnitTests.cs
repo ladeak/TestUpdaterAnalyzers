@@ -133,13 +133,19 @@ namespace NUnitToXUnitTests
             Assert.That(() => 5, Is.EqualTo(5));
             Assert.That(() => 5, Is.TypeOf<int>());
             Assert.That(true, Is.True);
+            Assert.That(false, Is.False);
             Assert.That(true);
             Assert.That(() => true);
             Assert.That(true, () => "error");
             Assert.That(() => true, () => "error");
             Assert.That(true, "error", "param");
             Assert.That(() => true, "error", "param");
-            Assert.That(() => throw new Exception(), Is.TypeOf<Exception>());
+            Assert.That(() => throw new Exception(), Throws.InstanceOf<Exception>());
+            Assert.That(() => throw new ArgumentNullException(), Throws.ArgumentNullException.With.Message.Not.Null);
+
+            Assert.That(false, Is.Not.True);
+            Assert.That(new int[] { }, Is.Empty);
         }
+
     }
 }

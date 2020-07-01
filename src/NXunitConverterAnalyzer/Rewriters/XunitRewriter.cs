@@ -102,7 +102,7 @@ namespace NXunitConverterAnalyzer.Rewriters
             {
                 if (node.Type is GenericNameSyntax genericType
                     && genericType.TypeArgumentList.Arguments.Count == 1
-                    && genericType.TypeArgumentList.Arguments.First() is IdentifierNameSyntax closedType)
+                    && genericType.TypeArgumentList.Arguments.First() is IdentifierNameSyntax closedType) // This is always IdentifierNameSyntax because it is IEnumerable<TestCaseData> type.
                 {
                     var genericSymbol = _semanticModel.GetSymbolInfo(closedType).Symbol;
                     if (!AttributesRecognizer.IsTestCaseData(genericSymbol))
@@ -298,15 +298,7 @@ namespace NXunitConverterAnalyzer.Rewriters
 
             if (isResolve != null)
             {
-                var isResolveIndex = symbol.Parameters.IndexOf(isResolve);
-                var isConstraintSymbol = _semanticModel.GetSymbolInfo(invocationExpression.ArgumentList.Arguments[isResolveIndex].Expression).Symbol as IMethodSymbol;
-                if (isResolveIndex < 0 || !ResolveRecognizer.TypeOfMethod(isConstraintSymbol))
-                    return invocationExpression;
-                var genericTypeArgName = isConstraintSymbol.TypeArguments.Select(x => x.Name).First();
-                var throwsGenericName = SyntaxFactory.GenericName(SyntaxFactory.Identifier("Throws"), SyntaxFactory.TypeArgumentList(SyntaxFactory.SingletonSeparatedList(SyntaxFactory.ParseTypeName(genericTypeArgName))));
-                return WrapInAction(invocationExpression.ArgumentList.Arguments.First().Expression, invocationExpression)
-                    .WithExpression(invocationMember.WithName(throwsGenericName));
-
+                return RewriteThat(invocationExpression);
             }
             if (isFunc && symbol.Parameters.First().Type is INamedTypeSymbol typeSymbol)
             {
@@ -326,10 +318,13 @@ namespace NXunitConverterAnalyzer.Rewriters
             if (assertData == null)
                 return invocationExpression;
 
+            if (string.IsNullOrWhiteSpace(assertData.AssertMethod))
+                return SyntaxFactory.InvocationExpression(SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, assertData.Arguments.First().Expression, SyntaxFactory.IdentifierName("Invoke")));
+
             var arguments = SyntaxFactory.ArgumentList(SyntaxFactory.SeparatedList(assertData.Arguments));
             SimpleNameSyntax methodName;
             if (assertData.AssertMethodTypeArgument != null)
-                methodName = SyntaxFactory.GenericName(SyntaxFactory.Identifier(assertData.AssertMethod), SyntaxFactory.TypeArgumentList(SyntaxFactory.SingletonSeparatedList(SyntaxFactory.ParseTypeName(assertData.AssertMethodTypeArgument))));
+                methodName = SyntaxFactory.GenericName(SyntaxFactory.Identifier(assertData.AssertMethod), SyntaxFactory.TypeArgumentList(SyntaxFactory.SingletonSeparatedList(assertData.AssertMethodTypeArgument)));
             else
                 methodName = SyntaxFactory.IdentifierName(assertData.AssertMethod);
 
@@ -427,10 +422,6 @@ namespace NXunitConverterAnalyzer.Rewriters
             {
                 if (lambda.ExpressionBody != null)
                     return lambda.ExpressionBody.WithLeadingTrivia(invocationExpression.GetLeadingTrivia());
-                if (lambda.Block != null)
-                {
-                    return invocationExpression;
-                }
             }
             return invocationExpression;
         }

@@ -238,7 +238,7 @@ namespace NUnitToXUnitTests
         }
 
         [TestMethod]
-        public async Task ThatBoolTestDelegate()
+        public async Task ThatThrowsTypeOfException()
         {
             var source =
 @"using NUnit.Framework;
@@ -251,7 +251,7 @@ namespace NUnitToXUnitTests
         [Test]
         public void TestAssertThat()
         {
-            Assert.That(() => throw new Exception(), Is.TypeOf<Exception>());
+            Assert.That(() => throw new Exception(), Throws.TypeOf<Exception>());
         }
     }
 }";

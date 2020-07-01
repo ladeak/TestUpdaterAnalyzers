@@ -9,7 +9,7 @@ namespace NXunitConverterAnalyzer.Data
 
         public string AssertMethod { get; set; }
 
-        public string AssertMethodTypeArgument { get; set; }
+        public TypeSyntax AssertMethodTypeArgument { get; set; }
 
         public MemberAccessExpressionSyntax InvocationMember { get; set; }
     }

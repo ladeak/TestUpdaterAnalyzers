@@ -31,42 +31,43 @@ namespace NXunitConverterAnalyzer.Walkers
 
                 var isResolveConstraint = symbol.Parameters.FirstOrDefault(x => ResolveRecognizer.ResolveConstraint(x.Type));
                 var isFunc = ResolveRecognizer.ActualValueDelegate(symbol.Parameters.First().Type);
+                var isAction = ResolveRecognizer.TestDelegate(symbol.Parameters.First().Type);
 
                 if (isResolveConstraint is null)
                     return null;
 
                 if (isFunc)
+                {
                     _assertThatContext.Current.Arguments.Add(SyntaxFactory.Argument(
                         WrapInFunc(invocationExpression.ArgumentList.Arguments.First().Expression, symbol.TypeArguments.Select(x => x.Name))));
+                }
+                else if (isAction)
+                {
+                    _assertThatContext.Current.Arguments.Add(SyntaxFactory.Argument(
+                        WrapInAction(invocationExpression.ArgumentList.Arguments.First().Expression)));
+                }
                 else
                     _assertThatContext.Current.Arguments.Add(invocationExpression.ArgumentList.Arguments.First());
 
                 var isResolveIndex = symbol.Parameters.IndexOf(isResolveConstraint);
-                var contraintExpression = invocationExpression.ArgumentList.Arguments[isResolveIndex].Expression;
-                var isConstraintSymbol = _semanticModel.GetSymbolInfo(invocationExpression.ArgumentList.Arguments[isResolveIndex].Expression).Symbol as ISymbol;
+                var constraintData = WalkConstraintExpression(invocationExpression.ArgumentList.Arguments[isResolveIndex].Expression);
 
-                _assertThatContext.Current.AssertMethod = Map(isConstraintSymbol.Name);
-
-                if (contraintExpression is InvocationExpressionSyntax isInvocationExpr && isInvocationExpr.ArgumentList.Arguments.Any())
-                    _assertThatContext.Current.Arguments.Add(isInvocationExpr.ArgumentList.Arguments.First());
-
-                if (isConstraintSymbol is IMethodSymbol isContstrainedMethodSymbol)
-                    _assertThatContext.Current.AssertMethodTypeArgument = isContstrainedMethodSymbol.TypeArguments.Select(x => x.Name).FirstOrDefault();
+                _assertThatContext.Current.AssertMethod = constraintData.ConstraintMode;
+                _assertThatContext.Current.AssertMethodTypeArgument = constraintData.ConstraintGenericType;
+                if (constraintData.ConstraintArgument != null)
+                    _assertThatContext.Current.Arguments.Add(constraintData.ConstraintArgument);
 
                 return _assertThatContext.Current;
             }
         }
 
-        public string Map(string name)
+        private ConstraintData WalkConstraintExpression(ExpressionSyntax contraintExpression)
         {
-            return name switch
-            {
-                "EqualTo" => "Equal",
-                "True" => "True",
-                "TypeOf" => "IsType",
-                _ => string.Empty
-            };
+            ConstraintWalker walker = new ConstraintWalker();
+            var contraintData = walker.GetConstraintData(contraintExpression);
+            return contraintData;
         }
+
 
         private InvocationExpressionSyntax WrapInFunc(ExpressionSyntax expression, IEnumerable<string> genericTypes)
         {
@@ -80,5 +81,13 @@ namespace NXunitConverterAnalyzer.Walkers
                 wrappedFunc, SyntaxFactory.IdentifierName("Invoke")));
         }
 
+        private ExpressionSyntax WrapInAction(ExpressionSyntax expression)
+        {
+            ExpressionSyntax wrappedFunc = SyntaxFactory.ObjectCreationExpression(
+                SyntaxFactory.IdentifierName("Action"),
+                SyntaxFactory.ArgumentList(SyntaxFactory.SingletonSeparatedList(
+                    SyntaxFactory.Argument(expression))), null);
+            return wrappedFunc;
+        }
     }
 }
