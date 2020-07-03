@@ -44,7 +44,7 @@ namespace NUnitToXUnitTests
     }
 }";
 
-            var expected = Verify.Diagnostic("ADNXunitConverterAnalyzer").WithLocation(8, 9).WithArguments("TestAssertEmpty");
+            var expected = Verify.Diagnostic("NXunitConverterAnalyzer").WithLocation(8, 9).WithArguments("TestAssertEmpty");
             await VerifyCodeFix.VerifyFixAsync(source, fixtest, expected);
         }
 
@@ -81,7 +81,7 @@ namespace NUnitToXUnitTests
     }
 }";
 
-            var expected = Verify.Diagnostic("ADNXunitConverterAnalyzer").WithLocation(7, 9).WithArguments("TestAssertEmpty");
+            var expected = Verify.Diagnostic("NXunitConverterAnalyzer").WithLocation(7, 9).WithArguments("TestAssertEmpty");
             await VerifyCodeFix.VerifyFixAsync(source, fixtest, expected);
         }
 
@@ -121,7 +121,7 @@ namespace NUnitToXUnitTests
 }";
 
 
-            var expected = Verify.Diagnostic("ADNXunitConverterAnalyzer").WithLocation(8, 9).WithArguments("TestAssertNotEmpty");
+            var expected = Verify.Diagnostic("NXunitConverterAnalyzer").WithLocation(8, 9).WithArguments("TestAssertNotEmpty");
             await VerifyCodeFix.VerifyFixAsync(source, fixtest, expected);
         }
 
@@ -159,7 +159,7 @@ namespace NUnitToXUnitTests
 }";
 
 
-            var expected = Verify.Diagnostic("ADNXunitConverterAnalyzer").WithLocation(7, 9).WithArguments("TestAssertNotEmpty");
+            var expected = Verify.Diagnostic("NXunitConverterAnalyzer").WithLocation(7, 9).WithArguments("TestAssertNotEmpty");
             await VerifyCodeFix.VerifyFixAsync(source, fixtest, expected);
         }
     }

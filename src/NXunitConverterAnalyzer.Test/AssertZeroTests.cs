@@ -42,7 +42,7 @@ namespace NUnitToXUnitTests
     }
 }";
 
-            var expected = Verify.Diagnostic("ADNXunitConverterAnalyzer").WithLocation(7, 9).WithArguments("TestAssertZero");
+            var expected = Verify.Diagnostic("NXunitConverterAnalyzer").WithLocation(7, 9).WithArguments("TestAssertZero");
             await VerifyCodeFix.VerifyFixAsync(source, fixtest, expected);
         }
 
@@ -79,7 +79,7 @@ namespace NUnitToXUnitTests
     }
 }";
 
-            var expected = Verify.Diagnostic("ADNXunitConverterAnalyzer").WithLocation(7, 9).WithArguments("TestAssertNotZero");
+            var expected = Verify.Diagnostic("NXunitConverterAnalyzer").WithLocation(7, 9).WithArguments("TestAssertNotZero");
             await VerifyCodeFix.VerifyFixAsync(source, fixtest, expected);
         }
 

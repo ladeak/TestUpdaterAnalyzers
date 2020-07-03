@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 
 namespace NUnitToXUnitTests
 {
+
     public class NUnitTests
     {
         [Test]

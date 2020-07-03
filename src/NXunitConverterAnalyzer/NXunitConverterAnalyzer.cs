@@ -11,7 +11,7 @@ namespace NXunitConverterAnalyzer
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public class NXunitConverterAnalyzer : DiagnosticAnalyzer
     {
-        public const string DiagnosticId = "ADNXunitConverterAnalyzer";
+        public const string DiagnosticId = "NXunitConverterAnalyzer";
 
         // You can change these strings in the Resources.resx file. If you do not want your analyzer to be localize-able, you can use regular strings for Title and MessageFormat.
         // See https://github.com/dotnet/roslyn/blob/master/docs/analyzers/Localizing%20Analyzers.md for more on localization
@@ -35,6 +35,13 @@ namespace NXunitConverterAnalyzer
         {
             if (context.Node is MethodDeclarationSyntax methodSyntax && methodSyntax.AttributeLists.Any())
             {
+                if (methodSyntax.Parent is ClassDeclarationSyntax classDeclaration
+                    && ((classDeclaration.BaseList?.Types.Any() ?? false)
+                       || (classDeclaration.Members.Any(x => x.IsKind(SyntaxKind.ConstructorDeclaration)))))
+                {
+                    return;
+                }
+
                 foreach (var attribute in methodSyntax.AttributeLists.SelectMany(x => x.Attributes))
                 {
                     var attributeSymbol = context.SemanticModel.GetSymbolInfo(attribute).Symbol as IMethodSymbol;

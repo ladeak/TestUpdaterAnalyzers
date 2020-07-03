@@ -15,6 +15,7 @@ namespace NXunitConverterAnalyzer.Test
             fixTester.ReferenceAssemblies = fixTester.ReferenceAssemblies.AddPackages(ImmutableArray.Create(new PackageIdentity("xunit", "2.4.1")));
             fixTester.TestCode = source;
             fixTester.FixedCode = fixtest;
+            fixTester.TestBehaviors = TestBehaviors.SkipGeneratedCodeCheck;
             fixTester.ExpectedDiagnostics.Add(expected);
             await fixTester.RunAsync();
         }
@@ -25,6 +26,16 @@ namespace NXunitConverterAnalyzer.Test
             analysisTester.ReferenceAssemblies = analysisTester.ReferenceAssemblies.AddPackages(ImmutableArray.Create(new PackageIdentity("nunit", "3.12.0")));
             analysisTester.TestCode = source;
             analysisTester.ExpectedDiagnostics.Add(expected);
+            analysisTester.TestBehaviors = TestBehaviors.SkipGeneratedCodeCheck;
+            await analysisTester.RunAsync();
+        }
+
+        public static async Task VerifyAnalyzerAsync(string source)
+        {
+            var analysisTester = new CSharpCodeFixTest<NXunitConverterAnalyzer, NXunitConverterFixProvider, MSTestVerifier>();
+            analysisTester.ReferenceAssemblies = analysisTester.ReferenceAssemblies.AddPackages(ImmutableArray.Create(new PackageIdentity("nunit", "3.12.0")));
+            analysisTester.TestCode = source;
+            analysisTester.TestBehaviors = TestBehaviors.SkipGeneratedCodeCheck;
             await analysisTester.RunAsync();
         }
     }

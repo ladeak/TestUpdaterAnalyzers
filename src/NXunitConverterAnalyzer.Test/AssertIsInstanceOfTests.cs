@@ -44,7 +44,7 @@ namespace NUnitToXUnitTests
     }
 }";
 
-            var expected = Verify.Diagnostic("ADNXunitConverterAnalyzer").WithLocation(8, 9).WithArguments("TestAssertIsInstanceOf");
+            var expected = Verify.Diagnostic("NXunitConverterAnalyzer").WithLocation(8, 9).WithArguments("TestAssertIsInstanceOf");
             await VerifyCodeFix.VerifyFixAsync(source, fixtest, expected);
         }
 
@@ -83,7 +83,7 @@ namespace NUnitToXUnitTests
     }
 }";
 
-            var expected = Verify.Diagnostic("ADNXunitConverterAnalyzer").WithLocation(8, 9).WithArguments("TestAssertIsNotInstanceOf");
+            var expected = Verify.Diagnostic("NXunitConverterAnalyzer").WithLocation(8, 9).WithArguments("TestAssertIsNotInstanceOf");
             await VerifyCodeFix.VerifyFixAsync(source, fixtest, expected);
         }
 
@@ -122,7 +122,7 @@ namespace NUnitToXUnitTests
     }
 }";
 
-            var expected = Verify.Diagnostic("ADNXunitConverterAnalyzer").WithLocation(8, 9).WithArguments("TestAssertIsAssignableFrom");
+            var expected = Verify.Diagnostic("NXunitConverterAnalyzer").WithLocation(8, 9).WithArguments("TestAssertIsAssignableFrom");
             await VerifyCodeFix.VerifyFixAsync(source, fixtest, expected);
         }
 
@@ -161,7 +161,7 @@ namespace NUnitToXUnitTests
     }
 }";
 
-            var expected = Verify.Diagnostic("ADNXunitConverterAnalyzer").WithLocation(8, 9).WithArguments("TestAssertIsAssignableFrom");
+            var expected = Verify.Diagnostic("NXunitConverterAnalyzer").WithLocation(8, 9).WithArguments("TestAssertIsAssignableFrom");
             await VerifyCodeFix.VerifyFixAsync(source, fixtest, expected);
         }
 
