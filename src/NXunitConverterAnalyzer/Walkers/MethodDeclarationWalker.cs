@@ -44,6 +44,15 @@ namespace NXunitConverterAnalyzer.Walkers
             {
                 _methodDeclarationContext.Current.HasTestCaseSourceAttribute = true;
             }
+            if (AttributesRecognizer.IsSetUpAttribute(symbolInfo))
+            {
+                _methodDeclarationContext.Current.HasSetUp = true;
+                return;
+            }
+            if (AttributesRecognizer.IsTearDownAttribute(symbolInfo))
+            {
+                _methodDeclarationContext.Current.HasTearDown = true;
+            }
         }
 
         public override void VisitInvocationExpression(InvocationExpressionSyntax node)

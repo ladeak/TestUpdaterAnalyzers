@@ -16,6 +16,10 @@ namespace NXunitConverterAnalyzer.Recognizers
 
         public static bool IsTestCaseDataCtor(ISymbol symbol) => IsSymbol(symbol, ".ctor", "TestCaseData");
 
+        public static bool IsSetUpAttribute(ISymbol symbol) => IsSymbol(symbol, ".ctor", "SetUpAttribute");
+
+        public static bool IsTearDownAttribute(ISymbol symbol) => IsSymbol(symbol, ".ctor", "TearDownAttribute");
+
         private static bool IsSymbol(ISymbol symbolsType, string name, string type, string assembly = "nunit.framework")
         {
             return symbolsType != null

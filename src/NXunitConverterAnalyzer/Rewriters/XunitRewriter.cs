@@ -7,9 +7,8 @@ using NXunitConverterAnalyzer.Recognizers;
 using NXunitConverterAnalyzer.Walkers;
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
-using System.Linq.Expressions;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -21,11 +20,13 @@ namespace NXunitConverterAnalyzer.Rewriters
         private Document _originalDocument;
         private SyntaxWalkContext<MethodDeclarationData, MethodDeclarationSyntax> _methodDeclarationContext;
         private SyntaxWalkContext<ClassDeclarationData, ClassDeclarationSyntax> _classDeclarationContext;
+        private DocumentData _documentData;
 
         public XunitRewriter()
         {
             _methodDeclarationContext = new SyntaxWalkContext<MethodDeclarationData, MethodDeclarationSyntax>(InitializeMethodDeclarationData);
             _classDeclarationContext = new SyntaxWalkContext<ClassDeclarationData, ClassDeclarationSyntax>(InitializeClassDeclarationData);
+            _documentData = new DocumentData();
         }
 
         public async Task<Document> UpdateToXUnitAsync(Document document, SemanticModel semanticModel, TextSpan diagnosticSpan, CancellationToken cancellationToken)
@@ -34,14 +35,19 @@ namespace NXunitConverterAnalyzer.Rewriters
             _originalDocument = document;
             var root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
 
-            var newRoot = Visit(root);
+            var newRoot = Visit(root) as CompilationUnitSyntax;
+            newRoot = AddUsings(newRoot);
             return document.WithSyntaxRoot(newRoot);
         }
 
         public override SyntaxNode VisitClassDeclaration(ClassDeclarationSyntax node)
         {
             using (_classDeclarationContext.Enter(node))
-                return base.VisitClassDeclaration(node);
+            {
+                ClassDeclarationSyntax newClassDeclaration = base.VisitClassDeclaration(node) as ClassDeclarationSyntax;
+                newClassDeclaration = HandleTearDown(newClassDeclaration);
+                return newClassDeclaration;
+            }
         }
 
         public override SyntaxNode VisitAttribute(AttributeSyntax node)
@@ -69,7 +75,7 @@ namespace NXunitConverterAnalyzer.Rewriters
         {
             using (_methodDeclarationContext.Enter(node))
             {
-                var newDeclaration = base.VisitMethodDeclaration(node) as MethodDeclarationSyntax;
+                BaseMethodDeclarationSyntax newDeclaration = base.VisitMethodDeclaration(node) as MethodDeclarationSyntax;
 
                 // Add Theory if no Test attribute to replace.
                 if ((_methodDeclarationContext.Current.HasTestCase || _methodDeclarationContext.Current.HasTestCaseSourceAttribute)
@@ -79,6 +85,8 @@ namespace NXunitConverterAnalyzer.Rewriters
                     newDeclaration = newDeclaration.WithAttributeLists(newDeclaration.AttributeLists.Insert(0, theoryAttribute));
                 }
                 newDeclaration = ReplaceBlocks(newDeclaration);
+                newDeclaration = HandleSetup(newDeclaration);
+                newDeclaration = HandleTearDown(newDeclaration);
                 return newDeclaration;
             }
         }
@@ -465,7 +473,48 @@ namespace NXunitConverterAnalyzer.Rewriters
             return initializer.GetClassDeclarationData(node);
         }
 
-        private MethodDeclarationSyntax ReplaceBlocks(MethodDeclarationSyntax node)
+        private BaseMethodDeclarationSyntax HandleSetup(BaseMethodDeclarationSyntax node)
+        {
+            if (_methodDeclarationContext.Current.HasSetUp)
+            {
+                var containingTypeName = _semanticModel.GetDeclaredSymbol(node).ContainingType.Name;
+
+                foreach (var attr in node.AttributeLists.ToArray())
+                    node.AttributeLists.Remove(attr);
+
+                return SyntaxFactory.ConstructorDeclaration(containingTypeName)
+                    .WithBody(node.Body)
+                    .WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)));
+            }
+            return node;
+        }
+
+        private BaseMethodDeclarationSyntax HandleTearDown(BaseMethodDeclarationSyntax node)
+        {
+            if (_methodDeclarationContext.Current.HasTearDown)
+            {
+                return SyntaxFactory.MethodDeclaration(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.VoidKeyword)), "Dispose")
+                    .WithBody(node.Body)
+                    .WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)));
+            }
+            return node;
+        }
+
+        private ClassDeclarationSyntax HandleTearDown(ClassDeclarationSyntax classDeclaration)
+        {
+            if (_classDeclarationContext.Current.HasTearDown)
+            {
+                _documentData.AddSystemUsing = true;
+                var baseType = SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName("IDisposable"));
+                var baseList = classDeclaration.BaseList ?? SyntaxFactory.BaseList(
+                    SyntaxFactory.SeparatedList<BaseTypeSyntax>());
+                baseList = baseList.WithTypes(baseList.Types.Add(baseType));
+                return classDeclaration.WithBaseList(baseList);
+            }
+            return classDeclaration;
+        }
+
+        private BaseMethodDeclarationSyntax ReplaceBlocks(BaseMethodDeclarationSyntax node)
         {
             var statements = node.Body.Statements;
             foreach (var replacement in _methodDeclarationContext.Current.BlockReplace)
@@ -480,6 +529,13 @@ namespace NXunitConverterAnalyzer.Rewriters
             }
             node = node.WithBody(node.Body.WithStatements(statements));
             return node;
+        }
+
+        private CompilationUnitSyntax AddUsings(CompilationUnitSyntax root)
+        {
+            if (_documentData.AddSystemUsing)
+                root = root.WithUsings(root.Usings.Insert(0, SyntaxFactory.UsingDirective(SyntaxFactory.IdentifierName("System"))));
+            return root;
         }
 
     }

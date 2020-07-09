@@ -50,6 +50,10 @@ namespace NXunitConverterAnalyzer.Walkers
                     }
                 }
             }
+            if (AttributesRecognizer.IsTearDownAttribute(symbolInfo))
+            {
+                _classDeclarationContext.Current.HasTearDown = true;
+            }
         }
     }
 }

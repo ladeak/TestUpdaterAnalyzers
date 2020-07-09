@@ -6,5 +6,7 @@ namespace NXunitConverterAnalyzer.Data
     public class ClassDeclarationData
     {
         public List<SyntaxToken> TestCaseSources { get; } = new List<SyntaxToken>();
+
+        public bool HasTearDown { get; set; }
     }
 }

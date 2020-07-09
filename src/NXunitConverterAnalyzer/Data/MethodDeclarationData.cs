@@ -14,5 +14,9 @@ namespace NXunitConverterAnalyzer.Data
 
         public Dictionary<InvocationExpressionSyntax, List<StatementSyntax>> BlockReplace { get; set; } = new Dictionary<InvocationExpressionSyntax, List<StatementSyntax>>();
 
+        public bool HasSetUp { get; set; }
+
+        public bool HasTearDown { get; set; }
+
     }
 }
