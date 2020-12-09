@@ -162,6 +162,57 @@ namespace RhinoXUnitFixture
         }
 
         [TestMethod]
+        public void ArgumentEqualExpression()
+        {
+            var test = @"
+using Rhino.Mocks;
+using Xunit;
+using SampleBusinessLogic;
+
+namespace RhinoXUnitFixture
+{
+    public class RhinoMocksTests
+    {
+        [Fact]
+        public void WhenValid_IdCalculated()
+        {
+            var mock = MockRepository.GenerateMock<IValidator>();
+            mock.Expect(x => x.Validate(Arg<Request>.Is.Equal(new Request() { Age = 1, Height = 1, Name = ""test"" }))).Return(true);
+            var sut = new BusinessLogic(mock);
+            var result = sut.CalculateId(request);
+            Assert.Equal(5, result);
+        }
+    }
+}
+";
+
+
+            var expectedSource = @"
+using NSubstitute;
+using Rhino.Mocks;
+using Xunit;
+using SampleBusinessLogic;
+
+namespace RhinoXUnitFixture
+{
+    public class RhinoMocksTests
+    {
+        [Fact]
+        public void WhenValid_IdCalculated()
+        {
+            var mock = Substitute.For<IValidator>();
+            mock.Validate(NSubstitute.Arg.Is<Request>(a0 => a0 == new Request() { Age = 1, Height = 1, Name = ""test"" })).Returns(true);
+            var sut = new BusinessLogic(mock);
+            var result = sut.CalculateId(request);
+            Assert.Equal(5, result);
+        }
+    }
+}
+";
+            VerifyCSharpFix(test, expectedSource, allowNewCompilerDiagnostics: false);
+        }
+
+        [TestMethod]
         public void ArgumentSame()
         {
             var test = @"
@@ -215,6 +266,57 @@ namespace RhinoXUnitFixture
         }
 
         [TestMethod]
+        public void ArgumentSameExpression()
+        {
+            var test = @"
+using Rhino.Mocks;
+using Xunit;
+using SampleBusinessLogic;
+
+namespace RhinoXUnitFixture
+{
+    public class RhinoMocksTests
+    {
+        [Fact]
+        public void WhenValid_IdCalculated()
+        {
+            var mock = MockRepository.GenerateMock<IValidator>();
+            mock.Expect(x => x.Validate(Arg<Request>.Is.Same(new Request() { Age = 1, Height = 1, Name = ""test"" }))).Return(true);
+            var sut = new BusinessLogic(mock);
+            var result = sut.CalculateId(request);
+            Assert.Equal(5, result);
+        }
+    }
+}
+";
+
+
+            var expectedSource = @"
+using NSubstitute;
+using Rhino.Mocks;
+using Xunit;
+using SampleBusinessLogic;
+
+namespace RhinoXUnitFixture
+{
+    public class RhinoMocksTests
+    {
+        [Fact]
+        public void WhenValid_IdCalculated()
+        {
+            var mock = Substitute.For<IValidator>();
+            mock.Validate(NSubstitute.Arg.Is<Request>(a0 => ReferenceEquals(a0, new Request() { Age = 1, Height = 1, Name = ""test"" }))).Returns(true);
+            var sut = new BusinessLogic(mock);
+            var result = sut.CalculateId(request);
+            Assert.Equal(5, result);
+        }
+    }
+}
+";
+            VerifyCSharpFix(test, expectedSource, allowNewCompilerDiagnostics: false);
+        }
+
+        [TestMethod]
         public void ArgumentMatches()
         {
             var test = @"
@@ -255,6 +357,57 @@ namespace RhinoXUnitFixture
         {
             var mock = Substitute.For<IValidator>();
             mock.Validate(NSubstitute.Arg.Is<Request>(y => y.Name == ""test"")).Returns(true);
+            var sut = new BusinessLogic(mock);
+            var result = sut.CalculateId(new Request() { Age = 1, Height = 1, Name = ""test"" });
+            Assert.Equal(5, result);
+        }
+    }
+}
+";
+            VerifyCSharpFix(test, expectedSource, allowNewCompilerDiagnostics: false);
+        }
+
+        [TestMethod]
+        public void ArgumentMatchesExpression()
+        {
+            var test = @"
+using Rhino.Mocks;
+using Xunit;
+using SampleBusinessLogic;
+
+namespace RhinoXUnitFixture
+{
+    public class RhinoMocksTests
+    {
+        [Fact]
+        public void WhenValid_IdCalculated()
+        {
+            var mock = MockRepository.GenerateMock<IValidator>();
+            mock.Expect(x => x.Validate(Arg<Request>.Matches(y => y.Name == ""test"".ToLower()))).Return(true);
+            var sut = new BusinessLogic(mock);
+            var result = sut.CalculateId(new Request() { Age = 1, Height = 1, Name = ""test"" });
+            Assert.Equal(5, result);
+        }
+    }
+}
+";
+
+
+            var expectedSource = @"
+using NSubstitute;
+using Rhino.Mocks;
+using Xunit;
+using SampleBusinessLogic;
+
+namespace RhinoXUnitFixture
+{
+    public class RhinoMocksTests
+    {
+        [Fact]
+        public void WhenValid_IdCalculated()
+        {
+            var mock = Substitute.For<IValidator>();
+            mock.Validate(NSubstitute.Arg.Is<Request>(y => y.Name == ""test"".ToLower())).Returns(true);
             var sut = new BusinessLogic(mock);
             var result = sut.CalculateId(new Request() { Age = 1, Height = 1, Name = ""test"" });
             Assert.Equal(5, result);
