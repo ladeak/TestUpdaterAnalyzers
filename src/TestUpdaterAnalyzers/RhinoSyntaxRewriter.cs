@@ -1,7 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -193,17 +192,17 @@ namespace TestUpdaterAnalyzers
                 {
                     if (RhinoRecognizer.IsEqualArgMethod(methodSymbol))
                     {
-                        var equalsTo = argumentMethodInvocation.ArgumentList.Arguments.First().Expression as IdentifierNameSyntax;
+                        var equalsTo = argumentMethodInvocation.ArgumentList.Arguments.First().Expression;
                         return UseArgWith(node, GetEqualsToGivenArgument(_methodContext.Current.UnusedLambdaToken, equalsTo));
                     }
                     if (RhinoRecognizer.IsSameArgMethod(methodSymbol))
                     {
-                        var sameTo = argumentMethodInvocation.ArgumentList.Arguments.First().Expression as IdentifierNameSyntax;
+                        var sameTo = argumentMethodInvocation.ArgumentList.Arguments.First().Expression;
                         return UseArgWith(node, GetReferenceEqualsToGivenArgument(_methodContext.Current.UnusedLambdaToken, sameTo));
                     }
                     if (RhinoRecognizer.IsMatchesArgMethod(methodSymbol))
                     {
-                        var lambdaArgument = argumentMethodInvocation.ArgumentList.Arguments.First().Expression as SimpleLambdaExpressionSyntax;
+                        var lambdaArgument = argumentMethodInvocation.ArgumentList.Arguments.First().Expression;
                         return UseArgWith(node, GetLambdaAsArgument(_methodContext.Current.UnusedLambdaToken, lambdaArgument));
                     }
                 }
@@ -500,7 +499,7 @@ namespace TestUpdaterAnalyzers
                     SyntaxFactory.BinaryExpression(SyntaxKind.NotEqualsExpression, SyntaxFactory.IdentifierName(token), SyntaxFactory.LiteralExpression(SyntaxKind.NullLiteralExpression))))));
         }
 
-        private ArgumentListSyntax GetEqualsToGivenArgument(SyntaxToken token, IdentifierNameSyntax equalsTo)
+        private ArgumentListSyntax GetEqualsToGivenArgument(SyntaxToken token, ExpressionSyntax equalsTo)
         {
             return SyntaxFactory.ArgumentList(SyntaxFactory.SingletonSeparatedList(
                 SyntaxFactory.Argument(
@@ -508,7 +507,7 @@ namespace TestUpdaterAnalyzers
                     SyntaxFactory.BinaryExpression(SyntaxKind.EqualsExpression, SyntaxFactory.IdentifierName(token), equalsTo)))));
         }
 
-        private ArgumentListSyntax GetReferenceEqualsToGivenArgument(SyntaxToken token, IdentifierNameSyntax sameAs)
+        private ArgumentListSyntax GetReferenceEqualsToGivenArgument(SyntaxToken token, ExpressionSyntax sameAs)
         {
             return SyntaxFactory.ArgumentList(SyntaxFactory.SingletonSeparatedList(
                 SyntaxFactory.Argument(
@@ -518,7 +517,7 @@ namespace TestUpdaterAnalyzers
             )))));
         }
 
-        private ArgumentListSyntax GetLambdaAsArgument(SyntaxToken token, SimpleLambdaExpressionSyntax lambdaArgument)
+        private ArgumentListSyntax GetLambdaAsArgument(SyntaxToken token, ExpressionSyntax lambdaArgument)
         {
             return SyntaxFactory.ArgumentList(SyntaxFactory.SingletonSeparatedList(
                 SyntaxFactory.Argument(lambdaArgument)));
