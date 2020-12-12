@@ -29,9 +29,7 @@ steps:
 - task: DotNetCoreCLI@2
   inputs:
     command: 'pack'
-    packagesToPack: |
-      **/TestUpdaterAnalyzers.csproj
-      **/NXunitConverterAnalyzer.csproj
+    packagesToPack: '**/TestUpdaterAnalyzers.csproj;**/NXunitConverterAnalyzer.csproj'
     nobuild: true
     includesymbols: true
     versioningScheme: 'byBuildNumber'
