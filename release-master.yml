@@ -1,10 +1,5 @@
 name: 0.1$(Rev:.r)-prerelease
 
-trigger:
-  branches:
-    exclude:
-    - '*'
-
 pool:
   vmImage: 'ubuntu-latest'
 
@@ -34,11 +29,14 @@ steps:
 - task: DotNetCoreCLI@2
   inputs:
     command: 'pack'
-    packagesToPack: '**/TestUpdaterAnalyzers.csproj'
+    packagesToPack: |
+      **/TestUpdaterAnalyzers.csproj
+      **/NXunitConverterAnalyzer.csproj
     nobuild: true
     includesymbols: true
     versioningScheme: 'byBuildNumber'
   displayName: dotnet pack
+
 - task: NuGetCommand@2
   inputs:
     command: 'push'
