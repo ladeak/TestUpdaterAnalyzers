@@ -16,7 +16,8 @@ namespace NXunitConverterAnalyzer.Data
 
         public bool HasSetUp { get; set; }
 
-        public bool HasTearDown { get; set; }
+        public bool HasOneTimeSetUp { get; set; }
 
+        public bool HasTearDown { get; set; }
     }
 }

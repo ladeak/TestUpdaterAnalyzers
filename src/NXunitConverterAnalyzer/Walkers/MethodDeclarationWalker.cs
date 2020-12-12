@@ -52,6 +52,12 @@ namespace NXunitConverterAnalyzer.Walkers
             if (AttributesRecognizer.IsTearDownAttribute(symbolInfo))
             {
                 _methodDeclarationContext.Current.HasTearDown = true;
+                return;
+            }
+            if (AttributesRecognizer.IsOneTimeSetUpAttribute(symbolInfo))
+            {
+                _methodDeclarationContext.Current.HasOneTimeSetUp = true;
+                return;
             }
         }
 

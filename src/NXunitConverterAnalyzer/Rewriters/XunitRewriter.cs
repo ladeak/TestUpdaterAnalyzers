@@ -5,10 +5,8 @@ using Microsoft.CodeAnalysis.Text;
 using NXunitConverterAnalyzer.Data;
 using NXunitConverterAnalyzer.Recognizers;
 using NXunitConverterAnalyzer.Walkers;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -469,7 +467,7 @@ namespace NXunitConverterAnalyzer.Rewriters
 
         private ClassDeclarationData InitializeClassDeclarationData(ClassDeclarationSyntax node)
         {
-            var initializer = new ClassDeclarationWalker(_semanticModel);
+            var initializer = new ClassDeclarationWalker(_semanticModel, _originalDocument);
             return initializer.GetClassDeclarationData(node);
         }
 

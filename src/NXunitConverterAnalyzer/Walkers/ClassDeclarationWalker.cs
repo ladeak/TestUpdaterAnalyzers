@@ -1,6 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.FindSymbols;
 using NXunitConverterAnalyzer.Data;
 using NXunitConverterAnalyzer.Recognizers;
 using System;
@@ -10,12 +11,15 @@ namespace NXunitConverterAnalyzer.Walkers
 {
     public class ClassDeclarationWalker : CSharpSyntaxWalker
     {
-        private SemanticModel _semanticModel;
+        private readonly SemanticModel _semanticModel;
+        private readonly Document _originalDocument;
         private SyntaxWalkContext<ClassDeclarationData> _classDeclarationContext;
+        private bool _collectIndentifiers = false;
 
-        public ClassDeclarationWalker(SemanticModel semanticModel)
+        public ClassDeclarationWalker(SemanticModel semanticModel, Document originalDocument)
         {
             _semanticModel = semanticModel ?? throw new ArgumentNullException(nameof(semanticModel));
+            _originalDocument = originalDocument ?? throw new ArgumentNullException(nameof(originalDocument));
             _classDeclarationContext = new SyntaxWalkContext<ClassDeclarationData>();
         }
 
@@ -23,9 +27,16 @@ namespace NXunitConverterAnalyzer.Walkers
         {
             using (_classDeclarationContext.Enter())
             {
+                _classDeclarationContext.Current.ClassSymbol = _semanticModel.GetDeclaredSymbol(node);
                 Visit(node);
                 return _classDeclarationContext.Current;
             }
+        }
+
+        public override void VisitMethodDeclaration(MethodDeclarationSyntax node)
+        {
+            base.VisitMethodDeclaration(node);
+            _collectIndentifiers = false;
         }
 
         public override void VisitAttribute(AttributeSyntax node)
@@ -53,6 +64,37 @@ namespace NXunitConverterAnalyzer.Walkers
             if (AttributesRecognizer.IsTearDownAttribute(symbolInfo))
             {
                 _classDeclarationContext.Current.HasTearDown = true;
+            }
+            if (AttributesRecognizer.IsOneTimeSetUpAttribute(symbolInfo))
+            {
+                _classDeclarationContext.Current.HasOneTimeSetup = true;
+            }
+            if (AttributesRecognizer.IsOneTimeSetUpAttribute(symbolInfo))
+            {
+                _collectIndentifiers = true;
+            }
+        }
+
+        public override void VisitIdentifierName(IdentifierNameSyntax node)
+        {
+            if (!_collectIndentifiers)
+                return;
+            base.VisitIdentifierName(node);
+            var declarations = SymbolFinder.FindDeclarationsAsync(_originalDocument.Project, node.Identifier.ValueText,
+                false, SymbolFilter.Member).Result;
+
+            foreach (var declaration in declarations)
+            {
+                if (SymbolEqualityComparer.Default.Equals(declaration.ContainingType, _classDeclarationContext.Current.ClassSymbol))
+                {
+                    var location = declaration.Locations.First();
+                    var declarationSyntax = location.SourceTree.GetRoot().FindNode(location.SourceSpan);
+                    _classDeclarationContext.Current.OneTimeDeclarations.Add(declarationSyntax);
+                    
+                    var identifierSymbol = _semanticModel.GetSymbolInfo(node).Symbol;
+                    _classDeclarationContext.Current.SymbolsMoved.Add(identifierSymbol);
+
+                }
             }
         }
     }

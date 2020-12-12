@@ -20,6 +20,8 @@ namespace NXunitConverterAnalyzer.Recognizers
 
         public static bool IsTearDownAttribute(ISymbol symbol) => IsSymbol(symbol, ".ctor", "TearDownAttribute");
 
+        public static bool IsOneTimeSetUpAttribute(ISymbol symbol) => IsSymbol(symbol, ".ctor", "OneTimeSetUpAttribute");
+
         private static bool IsSymbol(ISymbol symbolsType, string name, string type, string assembly = "nunit.framework")
         {
             return symbolsType != null
