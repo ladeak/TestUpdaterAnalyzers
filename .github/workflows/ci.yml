@@ -22,10 +22,10 @@ jobs:
     - name: Build
       run: |
         dotnet build src/TestUpdaterAnalyzers/TestUpdaterAnalyzers.csproj -c Debug
-        dotnet build src/TestUpdaterAnalyzers/TestUpdaterAnalyzers.Test.csproj -c Debug
+        dotnet build src/TestUpdaterAnalyzers.Test/TestUpdaterAnalyzers.Test.csproj -c Debug
         dotnet build src/NXunitConverterAnalyzer/NXunitConverterAnalyzer.csproj -c Debug
-        dotnet build src/NXunitConverterAnalyzer/NXunitConverterAnalyzer.Test.csproj -c Debug
+        dotnet build src/NXunitConverterAnalyzer.Test/NXunitConverterAnalyzer.Test.csproj -c Debug
     - name: Test
       run: |
-        dotnet test src/TestUpdaterAnalyzers/TestUpdaterAnalyzers.Test.csproj
-        dotnet test **/NXunitConverterAnalyzer.Test.csproj
+        dotnet test src/TestUpdaterAnalyzers.Test/TestUpdaterAnalyzers.Test.csproj
+        dotnet test src/NXunitConverterAnalyzer.Test/NXunitConverterAnalyzer.Test.csproj
