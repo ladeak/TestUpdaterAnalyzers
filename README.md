@@ -5,6 +5,8 @@ A C# analyzer to convert Rhino Mocks to NSubstitute.
 
 [![Azure Pipelines CI job](https://ladeak.visualstudio.com/My%20private%20projects/_apis/build/status/TestUpdaterAnalyzers%20-%20CI?branchName=master)](https://ladeak.visualstudio.com/My%20private%20projects/_build/latest?definitionId=9&branchName=master)
 
+![CI Build and Test](https://github.com/ladeak/TestUpdaterAnalyzers/workflows/CI%20Build%20and%20Test/badge.svg)
+
 [![NuGet](https://img.shields.io/nuget/v/LaDeak.TestMockUpdater.svg)](https://www.nuget.org/packages/LaDeak.TestMockUpdater/)
 
 ## Getting started
