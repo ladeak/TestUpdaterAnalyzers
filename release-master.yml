@@ -1,15 +1,27 @@
 name: 0.1$(Rev:.r)-prerelease
 
+trigger:
+  branches:
+    exclude:
+    - '*'
+
 pool:
   vmImage: 'ubuntu-latest'
 
 steps:
+- task: UseDotNet@2
+  inputs:
+    packageType: 'sdk'
+    version: '5.0.x'
+    
 - task: DotNetCoreCLI@2
   inputs:
     command: 'build'
     projects: |
       **/TestUpdaterAnalyzers.csproj
-      **/TestUpdaterAnalyzers.Tests.csproj
+      **/TestUpdaterAnalyzers.Test.csproj
+      **/NXunitConverterAnalyzer.csproj
+      **/NXunitConverterAnalyzer.Test.csproj
     arguments: '-c $(BuildConfiguration)'
   displayName: dotnet build
 

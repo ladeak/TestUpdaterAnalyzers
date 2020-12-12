@@ -5,14 +5,19 @@ pool:
   vmImage: 'ubuntu-latest'
 
 steps:
+- task: UseDotNet@2
+  inputs:
+    packageType: 'sdk'
+    version: '5.0.x'
+
 - task: DotNetCoreCLI@2
   inputs:
     command: 'build'
     projects: |
       **/TestUpdaterAnalyzers.csproj
       **/TestUpdaterAnalyzers.Test.csproj
-      **/ConvertNxUnitAnalyzer.csproj
-      **/ConvertNxUnitAnalyzer.Test.csproj
+      **/NXunitConverterAnalyzer.csproj
+      **/NXunitConverterAnalyzer.Test.csproj
     arguments: '-c Debug'
   displayName: dotnet build
 

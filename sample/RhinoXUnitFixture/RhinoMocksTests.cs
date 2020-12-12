@@ -113,9 +113,9 @@ namespace RhinoXUnitFixture
         public void Arg_ArgumentNull()
         {
             var mock = MockRepository.GenerateMock<IValidator>();
-            mock.Expect(x => x.Validate(Arg<Request>.Is.Null)).Return(true);
+            mock.Expect(x => x.Validate(Arg<Request>.Is.Null)).Return(false);
             var sut = new BusinessLogic(mock);
-            Assert.Throws<NullReferenceException>(() => sut.CalculateId(null));
+            Assert.Throws<ArgumentException>(() => sut.CalculateId(null));
         }
 
         [Fact]
