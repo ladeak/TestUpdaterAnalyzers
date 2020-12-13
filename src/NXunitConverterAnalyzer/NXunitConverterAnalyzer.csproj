@@ -17,7 +17,6 @@
     <PackageTags>NUnit, xUnit, converter, conversion, analyzers</PackageTags>
     <NoPackageAnalysis>true</NoPackageAnalysis>
     <RepositoryUrl>https://github.com/ladeak/TestUpdaterAnalyzers</RepositoryUrl>
-    <PackageLicenseUrl>https://github.com/ladeak/TestUpdaterAnalyzers/blob/master/LICENSE</PackageLicenseUrl>
     <PackageIcon>icon.png</PackageIcon>
     <PackageVersion>0.0.30</PackageVersion>
   </PropertyGroup>
